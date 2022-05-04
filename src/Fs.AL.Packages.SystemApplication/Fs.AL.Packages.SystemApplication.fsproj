@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <PackageOutputPath>../../nupkg</PackageOutputPath>
+        <Version>19.5.36567.36700</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- <ProjectReference Include="..\Fs.AL.Typeprovider.DesignTime\Fs.AL.Typeprovider.DesignTime.fsproj" /> -->
+      <!-- <ProjectReference Include="..\Fs.ALSeq.where (fun f -> ).Typeprovider.Runtime\Fs.AL.Typeprovider.Runtime.fsproj" /> -->
+        <PackageReference Include="Fs.AL.Core" Version="1.0.0"/>
+        <PackageReference Include="Fs.AL.Typeprovider" Version="1.0.6"/>
+    </ItemGroup>
+
+</Project>

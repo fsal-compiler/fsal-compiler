@@ -1,0 +1,31 @@
+{
+  "id": "5a9f3db1-4caa-48f9-be61-a03c7d284d7b",
+  "name": "Fs.AL.SampleProject",
+  "publisher": "Test",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "screenshots": [],
+  "platform": "19.0.0.0",
+  "application": "19.0.0.0",
+  "target": "Cloud",
+  "dependencies": [ ],
+  "idRanges": [
+    {
+      "from": 50000,
+      "to": 60200 
+    }
+  ],
+  "contextSensitiveHelpUrl": "https://localhost/help/",
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": true,
+    "includeSourceInSymbolFile": true
+  },
+  "runtime": "8.0"
+}

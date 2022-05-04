@@ -1,0 +1,80 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <PackageOutputPath>../../nupkg</PackageOutputPath>
+        <Version>1.0.0</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Logger.fs" />
+        <Compile Include="Reflection\FullNameOperators.fs" />
+        <Compile Include="Reflection\FullNameFSharp.fs" />
+        <Compile Include="CompilerServices\CompilerService.fs" />
+        <Compile Include="CompilerServices\CompilerSymbols.fs" />
+        <Compile Include="CompilerServices\CompilerDeclarations.fs" />
+        <Compile Include="CompilerServices\Visitors.fs" />
+        <Compile Include="IntermediateLanguage\ALLanguage.fs" />
+        <Compile Include="IntermediateLanguage\TypeReplacements.fs" />
+        <Compile Include="IntermediateLanguage\ALTypeMapping.fs" />
+        <Compile Include="IntermediateLanguage\ALContext.fs" />
+        <Compile Include="IntermediateLanguage\FSharpExpressionsMapping.fs" />
+        <Compile Include="IntermediateLanguage\ExpressionReader.fs" />
+        <Compile Include="IntermediateLanguage\ALBuilder.fs" />
+        <Compile Include="ALCodeGeneration\Common.fs" />
+        <Compile Include="ALCodeGeneration\Nodes.fs" />
+        <Compile Include="ALCodeGeneration\ALGenerator.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FSharp.Compiler.Service" Version="41.0.3" />
+      <PackageReference Update="FSharp.Core" Version="6.0.3" />
+      <PackageReference Include="FSharp.Interop.Dynamic" Version="5.0.1.268" />
+      <PackageReference Include="FSharp.SystemTextJson" Version="0.17.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Fs.AL.Core\Fs.AL.Core.fsproj" />
+<!--      <ProjectReference Include="..\Fs.AL.Typeprovider.DesignTime\Fs.AL.Typeprovider.DesignTime.fsproj" />-->
+<!--      <ProjectReference Include="..\Fs.AL.Typeprovider.Runtime\Fs.AL.Typeprovider.Runtime.fsproj" />-->
+    </ItemGroup>
+
+    <ItemGroup><!--  these must point to the the visual studio code AL extension path  -->
+<!--      <Reference Include="Microsoft.CodeAnalysis, Version=2.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">-->
+<!--        <HintPath>$(UserProfile)/.vscode\extensions\ms-dynamics-smb.al-8.4.586670\bin\Microsoft.CodeAnalysis.dll</HintPath>-->
+<!--      </Reference>-->
+<!--      <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=2.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">-->
+<!--        <HintPath>$(UserProfile)/.vscode\extensions\ms-dynamics-smb.al-8.4.586670\bin\Microsoft.CodeAnalysis.CSharp.dll</HintPath>-->
+<!--      </Reference>-->
+<!--      <Reference Include="Microsoft.Dynamics.Nav.CodeAnalysis, Version=8.4.8.62398, Culture=neutral, PublicKeyToken=31bf3856ad364e35">-->
+<!--        <HintPath>$(UserProfile)/.vscode\extensions\ms-dynamics-smb.al-8.4.586670\bin\Microsoft.Dynamics.Nav.CodeAnalysis.dll</HintPath>-->
+<!--      </Reference>-->
+<!--      <Reference Include="Microsoft.Dynamics.Nav.CodeAnalysis.Workspaces, Version=8.4.8.62398, Culture=neutral, PublicKeyToken=31bf3856ad364e35">-->
+<!--        <HintPath>$(UserProfile)/.vscode\extensions\ms-dynamics-smb.al-8.4.586670\bin\Microsoft.Dynamics.Nav.CodeAnalysis.Workspaces.dll</HintPath>-->
+<!--      </Reference>-->
+
+<!--  LOCAL  -->
+<!--      <Reference Include="ICSharpCode.SharpZipLib, Version=1.3.3.11, Culture=neutral, PublicKeyToken=1b03e6acf1164f73">-->
+<!--        <HintPath>lib\ICSharpCode.SharpZipLib.dll</HintPath>-->
+<!--      </Reference>-->
+      <Reference Include="Microsoft.CodeAnalysis, Version=2.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+        <HintPath>lib\Microsoft.CodeAnalysis.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=2.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+        <HintPath>lib\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Dynamics.Nav.CodeAnalysis, Version=8.4.8.62398, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+        <HintPath>lib\Microsoft.Dynamics.Nav.CodeAnalysis.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Dynamics.Nav.CodeAnalysis.Workspaces, Version=8.4.8.62398, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+        <HintPath>lib\Microsoft.Dynamics.Nav.CodeAnalysis.Workspaces.dll</HintPath>
+      </Reference>
+<!--      <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">-->
+<!--        <HintPath>lib\Newtonsoft.Json.dll</HintPath>-->
+<!--      </Reference>-->
+<!--      -->
+    </ItemGroup>
+
+</Project>

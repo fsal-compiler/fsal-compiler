@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>Fs.AL.Typeprovider</id>
+    <title>AL Package Typeprovider</title>
+    <version>1.0.7</version>
+    <authors>Ian Erik Varatalu</authors>
+    <owners>Ian Erik Varatalu</owners>
+    <summary>Creates types from .alpackage files</summary>
+    <description>-</description>
+    <releaseNotes>-</releaseNotes>
+    <copyright>Copyright 2021</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <!-- <icon>icon.png</icon> -->
+    <!-- <projectUrl>http://localhost</projectUrl> -->
+    <tags>Typeprovider AL</tags>
+    <dependencies>
+      <group targetFramework=".net6.0">
+        <!-- <dependency id="SampleDependency" version="1.0.0" /> -->
+      </group>
+    </dependencies>
+    <references>
+      <!-- <reference file="Fs.AL.Typeprovider.Runtime.dll" /> -->
+    </references>
+  </metadata>
+  <files>
+    <file src="bin\Release\net6.0\Fs.AL.Typeprovider.Runtime.xml" target="lib/net6.0" />
+    <file src="bin\Release\net6.0\Fs.AL.Typeprovider.Runtime.dll" target="lib/net6.0" />
+    <file src="bin\Release\net6.0\Fs.AL.Typeprovider.Runtime.pdb" target="lib/net6.0" />
+    <file src="bin\Release\net6.0\Fs.AL.Typeprovider.DesignTime.dll" target="lib/net6.0" />
+    <file src="bin\Release\net6.0\Fs.AL.Typeprovider.DesignTime.pdb" target="lib/net6.0" />
+    <file src="bin\Release\net6.0\Fs.AL.Core.dll" target="lib/net6.0" />
+    <file src="lib\Newtonsoft.Json.dll" target="lib/net6.0" />
+    <file src="lib\Microsoft.Dynamics.Nav.CodeAnalysis.Workspaces.dll" target="lib/net6.0" />
+    <file src="lib\Microsoft.Dynamics.Nav.CodeAnalysis.dll" target="lib/net6.0" />
+    <file src="lib\ICSharpCode.SharpZipLib.dll" target="lib/net6.0" />
+  </files>
+</package>

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0-windows</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="RecordTest01SimpleRecord.fs" />
+        <Compile Include="RecordTest02Inheritance.fs" />
+        <Compile Include="CodeunitTest01SimpleMethods.fs" />
+        <Compile Include="CodeunitTest02PatternMatches.fs" />
+        <Compile Include="CodeunitTest03Constructors.fs" />
+        <Compile Include="CodeunitTest04SingleInstanceModule.fs" />
+        <Compile Include="CodeunitTest05StrongTypedFunctions.fs" />
+        <Compile Include="CodeunitTest06JsonProvider.fs" />
+        <Compile Include="CodeunitTest07Legacy.fs" />
+        <Compile Include="Demo01HTTPRequests.fs" />
+        <Compile Include="Program.fs" />
+        <None Include="replexample.fsx" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Fable.JsonProvider" Version="1.0.1" />
+<!--        <PackageReference Include="Fs.AL.Core" Version="1.0.1" />-->
+        <PackageReference Include="Fs.AL.Packages.BaseApplication" Version="19.5.36567.36700" />
+        <PackageReference Include="Fs.AL.Packages.System" Version="19.0.36528.36625" />
+        <PackageReference Update="FSharp.Core" Version="6.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Fs.AL.Core\Fs.AL.Core.fsproj" />
+    </ItemGroup>
+</Project>

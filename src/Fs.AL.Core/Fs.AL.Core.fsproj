@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <PackageOutputPath>../../nupkg</PackageOutputPath>
+        <Version>1.0.1</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Abstract.fs" />
+        <Compile Include="ALCoreValues.fs" />
+        <Compile Include="ALFunctions.fs" />
+        <Compile Include="ALSimpleValues.fs" />
+        <Compile Include="ALComplexValues.fs" />
+        <Compile Include="ImplementedBcComplexValues.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+    </ItemGroup>
+
+</Project>
