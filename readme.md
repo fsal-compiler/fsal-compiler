@@ -15,4 +15,11 @@ NOTE: Projects with large packages generated from Type Provider have been commen
 - add the following entry to packageSources:
 - `<add key="fsalcompiler" value="C:\<path/to/repository>\Fs.AL\nupkg" />`
 
-#### .. 
+#### Building the project and compiling
+
+- restore the dependencies using `dotnet restore`
+- build the solution using `dotnet build`
+- open the directory `src\Fs.AL.SampleProject`
+- inside the directory is an `fsal.json` file, which specifies the paths used for resolving dependencies by the compiler, ensure that there is a reference to the .NET installation e.g. `"C:\\Program Files\\dotnet\\packs\\Microsoft.NETCore.App.Ref\\6.0.3\\ref\\net6.0"` and a reference to the design-time DLLs of any used type provider (e.g. the Fable.JsonProvider dll `"C:\\users\\username\\.nuget\\packages\\fable.jsonprovider\\1.0.1\\lib\\netstandard2.0\\Fable.JsonProvider.dll"`)
+- after that run `dotnet fsi compile.fsx`, which runs the compiler in the current working directory
+
