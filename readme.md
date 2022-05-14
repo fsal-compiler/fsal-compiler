@@ -13,7 +13,7 @@ NOTE: Projects with large packages generated from Type Provider have been commen
 
 - open the nuget config file (`%APPDATA%\NuGet\NuGet.Config`)
 - add the following entry to packageSources:
-- `<add key="fsalcompiler" value="C:\<path/to/repository>\Fs.AL\nupkg" />`
+- `<add key="fsalcompiler" value="C:\<path/to/repository>\nupkg" />`
 
 #### Building the project and compiling
 
