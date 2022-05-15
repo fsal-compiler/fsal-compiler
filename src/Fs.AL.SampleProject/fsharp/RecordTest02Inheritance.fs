@@ -26,14 +26,10 @@ type SharedRecordType() =
     member this.AssignShared1 (data:string) = 
         let customer = Fs.AL.Packages.BaseApplicationALPackage.Tables.Customer()
         customer.Get(data)
-
         customer.Address <- "asfdsfgsd"
-
         customer.Modify() 
+        Console.WriteLine "asdasdasd"
 
-        Console.WriteLine "tehtud"
-
-        // this.Shared1 <- data + "somethingmore"
     
 
     

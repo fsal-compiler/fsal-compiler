@@ -16,7 +16,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Fs.AL.Typeprovider.DesignTime\Fs.AL.Typeprovider.DesignTime.fsproj" PrivateAssets="all"/>
       <ProjectReference Include="..\Fs.AL.Typeprovider.Runtime\Fs.AL.Typeprovider.Runtime.fsproj" PrivateAssets="all"/>
-        <!-- <PackageReference Include="Fs.AL.Typeprovider" Version="1.0.0" /> -->
     </ItemGroup>
 
 </Project>

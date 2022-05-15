@@ -28,7 +28,7 @@ table 60003 Inherited2
         customer.Get(data);
         customer.Address := 'asfdsfgsd';
         customer.Modify();
-        Dialog.Message('tehtud');
+        Dialog.Message('asdasdasd');
     end;
 
 }

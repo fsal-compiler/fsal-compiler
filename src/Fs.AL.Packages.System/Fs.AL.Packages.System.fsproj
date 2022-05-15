@@ -13,10 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <!-- <ProjectReference Include="..\Fs.AL.Typeprovider.DesignTime\Fs.AL.Typeprovider.DesignTime.fsproj" /> -->
-      <!-- <ProjectReference Include="..\Fs.AL.Typeprovider.Runtime\Fs.AL.Typeprovider.Runtime.fsproj" /> -->
-        <PackageReference Include="Fs.AL.Core" Version="1.0.0"/>
-        <PackageReference Include="Fs.AL.Typeprovider" Version="1.0.6"/>
+       <ProjectReference Include="..\Fs.AL.Typeprovider.DesignTime\Fs.AL.Typeprovider.DesignTime.fsproj" /> 
+       <ProjectReference Include="..\Fs.AL.Typeprovider.Runtime\Fs.AL.Typeprovider.Runtime.fsproj" /> 
     </ItemGroup>
 
     <ItemGroup>
