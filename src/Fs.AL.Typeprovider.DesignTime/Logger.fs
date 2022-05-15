@@ -19,9 +19,10 @@ let log =
             mutex.ReleaseMutex()
     
     #if DEBUG
-    fun (msg: string) -> logmsg msg
+    fun (msg: string) -> ()
+//    fun (msg: string) -> logmsg msg
     #else
-    ()
+    fun (msg: string) -> ()
 //    fun (msg: string) -> logmsg msg
 //    fun (msg: string) -> logmsg msg
     #endif
