@@ -2,7 +2,7 @@
     "includePaths": [
         "fsharp/bin/Debug/net6.0-windows",
         "fsharp/bin/Debug/net6.0-windows/lib",
-        "C:\\Program Files\\dotnet\\packs\\Microsoft.NETCore.App.Ref\\6.0.3\\ref\\net6.0"
+        "C:\\Program Files\\dotnet\\packs\\Microsoft.NETCore.App.Ref\\6.0.5\\ref\\net6.0"
     ],
     "includeDlls": [
         "C:\\Users\\kast\\.nuget\\packages\\fable.jsonprovider\\1.0.1\\lib\\netstandard2.0\\Fable.JsonProvider.dll"
