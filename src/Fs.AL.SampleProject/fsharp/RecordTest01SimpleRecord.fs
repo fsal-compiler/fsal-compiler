@@ -16,13 +16,11 @@ type SimpleRecord() =
     member val SomeNumber2 = 0 with get, set
     member val SomeNumber3 = 0 with get, set
 
-    member this.SampleFunction(input:string) =
-        
+    member this.SampleFunction(input: string) =
+
         let sum =
             this.SomeNumber
             + this.SomeNumber2
             + this.SomeNumber3
-            
-        sum
 
-    
+        sum

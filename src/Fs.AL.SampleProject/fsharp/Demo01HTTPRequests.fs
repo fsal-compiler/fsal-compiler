@@ -27,33 +27,42 @@ type TranslationManagement() =
 
     member this.getTokenAsObject(jsonObject: ALJsonObject, tokenKey: string, error: string) =
         let jtoken = ref (ALJsonToken())
+
         if not (jsonObject.SelectToken(tokenKey, jtoken)) then
             if error <> "" then failwith error
+
         jtoken.Value.AsObject()
 
     member this.getTokenAsArray(jsonObject: ALJsonObject, tokenKey: string, error: string) =
         let jtoken = ref (ALJsonToken())
+
         if not (jsonObject.SelectToken(tokenKey, jtoken)) then
             if error <> "" then failwith error
+
         jtoken.Value.AsArray()
 
     member this.getArrayElementAsObject(jsonArray: ALJsonArray, index: int, error: string) =
         let jtoken = ref (ALJsonToken())
+
         if not (jsonArray.Get(index, jtoken)) then
             if error <> "" then failwith error
+
         jtoken.Value.AsObject()
 
     member this.handleErrors(jContent: ALJsonObject) =
         let details =
-            this.getTokenAsObject(jContent, "details", "Invalid response from Web Service")
+            this.getTokenAsObject (jContent, "details", "Invalid response from Web Service")
+
         let locations =
-            this.getTokenAsArray(details, "locations", "No locations available")
+            this.getTokenAsArray (details, "locations", "No locations available")
+
         let location =
-            this.getArrayElementAsObject(locations, 0, "Location not available")
+            this.getArrayElementAsObject (locations, 0, "Location not available")
+
         ()
-    
-    
-    // this is not implemented - 
+
+
+    // this is not implemented -
 //    member this.handleErrorsPatternMatch(response: API.Root) =
 //        match response with
 //        // details dont exist
@@ -67,8 +76,8 @@ type TranslationManagement() =
 //            failwith "Location not available"
 //        | _ ->
 //            () // the response is correct
-    
-    member this.ReadJsonUsingTypeProvider(json:string,customer:byref<Customer>) =
+
+    member this.ReadJsonUsingTypeProvider(json: string, customer: byref<Customer>) =
         let response = APIResponseProvider(json)
 
         let details = response.details
@@ -102,7 +111,7 @@ type TranslationManagement() =
         this.handleErrors (jContent)
 
         // from here on using the Json Type Provider
-        this.ReadJsonUsingTypeProvider(responseText.Value,&customer)
+        this.ReadJsonUsingTypeProvider(responseText.Value, &customer)
 
 
 
@@ -114,7 +123,7 @@ type TranslationManagement() =
         httpContent.WriteFrom("{\"domain\":\"" + input + "\"}")
         let httpClient = ALHttpClient()
         httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer <YOUR KEY>")
-//        let httpResponse = ref (ALHttpResponseMessage())
+        //        let httpResponse = ref (ALHttpResponseMessage())
         let httpResponse = ref (ALHttpResponseMessage())
         httpClient.Post("https://api.fullcontact.com/v3/company.enrich", httpContent, httpResponse)
 
@@ -125,28 +134,3 @@ type TranslationManagement() =
         httpResponse.Value.Content.ReadAs(responseText)
 
         "the response:" + responseText.Value
-
-
-
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         
-         

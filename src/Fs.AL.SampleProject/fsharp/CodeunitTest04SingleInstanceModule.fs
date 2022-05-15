@@ -12,5 +12,3 @@ open Fs.AL.SampleProject.RecordTest01
 [<ALSingleInstanceCodeunit(60004)>]
 module SingleInstanceModule =
     let add2 x = x + 2
-    
-
