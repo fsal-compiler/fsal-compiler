@@ -1,10 +1,9 @@
 module Fs.AL.SampleProject.CodeunitTest06JsonProvider
 
 open Fs.AL.Core.Abstract
-open Fable.JsonProvider
 
 type SampleJsonProvider =
-   Generator<"""{"firstName":"john","lastName":"smith","age":10}""">
+    Fable.JsonProvider.Generator<"""{"firstName":"john","lastName":"smith","age":10}""">
 
 [<ALSingleInstanceCodeunit(60006)>]
 module JsonProvider =
