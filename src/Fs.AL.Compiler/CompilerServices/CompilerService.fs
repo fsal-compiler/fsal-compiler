@@ -23,9 +23,10 @@ type FSharpToALCompilerSettings = {
 
 /// todo: this is a great place to limit functionality with included std dlls
 let getReferences (settings:FSharpToALCompilerSettings) =
+    let envar x = System.Environment.ExpandEnvironmentVariables x
     [
-      yield! (settings.includePaths.Value |> List.map (fun f -> $"-I:{f}"))
-      yield! (settings.includeDlls.Value |> List.map (fun f -> $"-r:{f}"))
+      yield! (settings.includePaths.Value |> List.map (fun f ->  $"-I:{envar f}"))
+      yield! (settings.includeDlls.Value |> List.map (fun f -> $"-r:{envar f}"))
       // sample project dependencies
       // TODO : get dependencies from fsproj
       @"-r:Fs.AL.Packages.BaseApplication.dll"
