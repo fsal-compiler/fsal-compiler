@@ -63,9 +63,7 @@ module ALType =
             Complex (Record (roottype |> FSharpEntity.getALCompiledName))
         // just for debugging
         | x -> failwith "unknown type"
-        | x ->
-            let d = 5
-            ALSimpleType.Text None |> Simple
+        
             
     let isRef (fst:FSharpType) = fst.TypeDefinition |> FSharpType.isRefType
        
@@ -109,8 +107,6 @@ module ALType =
             | x ->
                 let d = 5
                 failwithf $"%A{x}"
-        | x -> 
-            let d = 5
-            failwithf $"%A{x}"
+        
 
     let oa : int64 = 1

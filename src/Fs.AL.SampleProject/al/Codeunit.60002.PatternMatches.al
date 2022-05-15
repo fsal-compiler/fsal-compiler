@@ -14,7 +14,9 @@ codeunit 60002 PatternMatches
         result := 'one two or three' else 
         if (v > 500) then 
         result := 'greater than 500' else 
-        if (v < 0) then result := 'less than 0' else result := 'other';
+        if (v < 0) then 
+        result := 'less than 0' else 
+        result := 'other';
         Dialog.Message('matched result:' + result);
     end;
 
@@ -34,7 +36,9 @@ codeunit 60002 PatternMatches
         result := 'compile-time constant' else 
         if (v.StartsWith('d')) then 
         result := 'starts with d' else 
-        if (v.EndsWith('e')) then result := 'ends with e' else result := 'other text';
+        if (v.EndsWith('e')) then 
+        result := 'ends with e' else 
+        result := 'other text';
         Dialog.Message('matched result:' + result);
     end;
 }

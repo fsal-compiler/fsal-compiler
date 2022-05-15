@@ -522,6 +522,7 @@ module ALExpressionVisitor =
             | Invocation(alExpression, alExpressions) ->
                 visit fn alExpression
                 alExpressions |> Seq.iter (visit fn)
+            | _ -> failwith "unimplemented case"
         | UnaryExp (op,a1) -> visit fn a1
         | FSharpLambda(newVariable, alExpression) ->
             visit fn alExpression

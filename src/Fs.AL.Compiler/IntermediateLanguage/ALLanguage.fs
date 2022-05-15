@@ -207,6 +207,8 @@ module ALExpression =
                 | Invocation(alExpression, alExpressions) ->
                     Invocation(alExpression,alExpressions @ [arg])
                     |> NaryExpression
+                | _ -> failwith "unimplemented case"
+            | _ -> failwith "unimplemented case"
                 
         let changeArgument (arg:ALExpression) (invocExpr:ALExpression) =
             match invocExpr with
@@ -215,4 +217,6 @@ module ALExpression =
                 | Invocation(alExpression, alExpressions) ->
                     Invocation(alExpression,[arg])
                     |> NaryExpression
+                | _ -> failwith "unimplemented case"
+            | _ -> failwith "unimplemented case"
                 
