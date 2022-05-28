@@ -9,6 +9,8 @@ open Fs.AL.Compiler.CompilerDeclarations
 open Fs.AL.Compiler.CompilerService
 open Microsoft.FSharp.Core
 
+//Directory.SetCurrentDirectory(@"C:\Users\kast\source\publicrepos\fsal-maaamet")
+
 let settings =
     match "fsal.json" |> File.Exists with
     | false -> failwith "no fsal.json found"

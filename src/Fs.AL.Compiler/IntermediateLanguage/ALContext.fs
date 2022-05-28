@@ -6,6 +6,7 @@ open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage
 open Fs.AL.Compiler.Reflection
+open Fs.AL.Compiler.Visitors
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
 open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
@@ -14,6 +15,7 @@ open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
 
 // Tom Hvitved - Architectural Analysis of Microsoft Dynamics NAV
 // Page 30 - definition of procedure
+
 
 type ALProcedureContext =
     {
@@ -24,6 +26,7 @@ type ALProcedureContext =
         statements : ObservableCollection<ALStatement>
         returnType : ALType option
         entity : FSharpEntity
+        mutable expressionContext : ExpressionContext
     }
     static member Default = {
         isLocal = false
@@ -33,6 +36,7 @@ type ALProcedureContext =
         statements = ObservableCollection()
         returnType = None
         entity = Unchecked.defaultof<FSharpEntity>
+        expressionContext = ExpressionContext.None
     }
     
     

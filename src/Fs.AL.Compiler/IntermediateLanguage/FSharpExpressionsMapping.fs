@@ -1,5 +1,6 @@
 module rec Fs.AL.Compiler.IntermediateLanguage.FSharpExpressionsMapping
 
+open System
 open Fs.AL.Compiler
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage.ALContext
@@ -9,6 +10,7 @@ open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Compiler.Reflection
 open ALLanguage
 open Fs.AL.Core.Abstract
+open Microsoft.FSharp.Reflection
 
 module JsonTokens =
     
@@ -77,6 +79,32 @@ module JsonTokens =
         assignmentExpr
         |> b.statements.Add
 
+    let handleSelectTokenReturn b (letBinding:FSharpMemberOrFunctionOrValue) tgt methodname args =
+        //todo:json-parsing:selecttoken
+        let jsonTokenName = "_jtoken"
+        // declare intermediate json token if it doesnt exist
+        if b.localVariables |> Seq.exists (fun f -> f.name = jsonTokenName) |> not then
+            {
+                ALVariable.isMutable = false
+                name = jsonTokenName
+                altype = Simple (SimpleType "JsonToken")
+            }
+            |> b.localVariables.Add
+        // parse value into json token
+        // AL: <tgt>.SelectToken('hello',<jsonTokenName>);
+        ALExpression.createMemberAccessInvocation tgt methodname (args @ [Identifier jsonTokenName])
+        |> Expression
+        |> b.statements.Add
+        
+        let letBindingTypeFullName = (FSharpType.getFullName letBinding.FullType)
+                
+        let assignmentExpr =
+            Assignment(
+                Identifier letBinding.DisplayName,
+                getJsonCastExpr letBindingTypeFullName
+            )
+//                        let castExpr = Assignment (letBinding)
+        assignmentExpr
     
     let handleIntermediateCoerceCast b targetType target methodname args =
         let varname = "_var" + string b.localVariables.Count
@@ -258,7 +286,7 @@ module ALExpression =
         match exp with
         | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, argExprs) ->
             
-            
+            let d = 5
             if memberOrFunc.IsPropertySetterMethod || memberOrFunc.IsImplicitConstructor then
                 let prop =
                     memberOrFunc.DisplayName
@@ -361,8 +389,66 @@ module ALExpression =
                             target ("SelectToken") [arg;Identifier (b.localVariables |> Seq.last).name]
                     else Identifier "aaaaaaaaaaaaaaaaaaaa"
 //                | "Fs.AL.Core.ALSimpleValues.ReadFrom" ->
-                | "Microsoft.FSharp.Core.Operators.ignore" ->
-                    FSALExpr Ignore
+                | "Microsoft.FSharp.Core.Operators.ignore" -> FSALExpr Ignore
+                | "Microsoft.FSharp.Collections.Array.length" ->
+                    match argExprs with
+                    | [FSharpExprPatterns.Value(v)] ->
+                        match ALType.ofFSharpType v.FullType with
+                        | Simple (SimpleType "JsonArray") ->
+                            match argExprs with
+                            | [ x ] ->
+                                let alexp =
+                                    ALExpression.createMemberAccess
+                                        (Identifier v.DisplayName)
+                                        (Identifier "Count")
+                                alexp
+                            | _ ->                                 
+                             
+                                let t1 = 5
+                                failwith "wait"
+                        | v ->
+                            let t2 = 5
+                            failwith "wait"
+                    | _ -> 
+                        FSALExpr Ignore
+                // AL Static method
+                | x when
+                    objExprOpt.IsNone
+                    &&
+                    (memberOrFunc.ApparentEnclosingEntity |> FSharpEntity.isALObject
+                    || memberOrFunc.ApparentEnclosingEntity.IsFSharpModule)
+                 ->
+                    
+                    let ent = memberOrFunc.ApparentEnclosingEntity
+                    let isSingleInstCodeunit = ent |> FSharpEntity.hasAttribute<ALSingleInstanceCodeunit>
+                    let isStaticReference = 
+                        if isSingleInstCodeunit
+                            then Some (ALType.Complex (Codeunit ent.DisplayName))
+                        else
+                            let at = Type.GetType(ent.FullName)
+                            let typebyctor = ent.MembersFunctionsAndValues[0]
+                            let gotType = FSharpEntity.tryGetType ent
+                            let isfstype = gotType |> FSharpType.isInheritedFromALType
+                            Some (ALType.ofFSharpType gotType.Value)
+                            
+                    match isStaticReference with
+                    | None -> failwith "could not resolve type" 
+                    | Some reftype ->
+                        let dispName = "_static_"+ent.DisplayName
+                        let staticVar =
+                            {
+                                isMutable = false
+                                name = dispName
+                                altype = reftype
+                            }
+                        b.localVariables.Add staticVar    
+                        
+                        let expr =
+                            ALExpression.createMemberAccessInvocation
+                                (Identifier dispName)
+                                memberOrFunc.DisplayName
+                                (argExprs |> List.map (ofFSharpExpr b))
+                        expr
                 | _ ->
                     if memberOrFunc.CompiledName = "op_Implicit" then argExprs[0] |> ofFSharpExpr b
                     else
@@ -376,7 +462,7 @@ module ALExpression =
                         let f = 5
                         failwithf $"case not implemented %A{memberOrFunc.FullName}"
         | FSharpExprPatterns.Lambda(lambdaVar, bodyExpr) ->
-            let vg = 5
+            let block = Block
             let alExpr = bodyExpr |> ofFSharpExpr b
             let vname = $"v{b.localVariables.Count}"
             let newVar = {
@@ -386,8 +472,10 @@ module ALExpression =
 //                altype = ALType.ofFSharpType bodyExpr.Type
             }
             b.localVariables.Add(newVar)
-            let e2 = alExpr |> ALExpression.Invocation.changeArgument (Identifier vname)
-            FSharpLambda (newVar,e2)
+//            let e2 = alExpr |> ALExpression.Invocation.changeArgument (Identifier vname)
+//            FSharpLambda (newVar,e2)
+//            FSALExpr Ignore
+            alExpr
             
         | FSharpExprPatterns.Value(valueToGet) ->
             
@@ -459,6 +547,13 @@ module ALExpression =
             if last = varToAdd then bodyExpr |> ofFSharpExpr b else
             let assignedTo = Identifier bindingVar.DisplayName
             let assignment = bindingExpr |> ofFSharpExpr b
+            match assignment with
+            | FSALExpr (InvocationWithoutLastArg (target,method,args)) ->
+                JsonTokens.handleSelectTokenReturn
+                    b bindingVar target method args
+                |> (fun f -> FSALExpr (FSALMappingExpr.StatementExpr f))
+//                FSALExpr Ignore
+            | _ ->                
             let innerstatement = Assignment (assignedTo, assignment)
             // json := 'sometext';
             b.statements.Add (innerstatement)
@@ -544,7 +639,7 @@ module ALStatementVisitor =
         | Sequence(alStatement, statement) ->
             visit fn alStatement
             visit fn statement
-        | BeginEnd alStatement -> visit fn alStatement
+        | Block alStatement -> visit fn alStatement
         | IfStatement(alExpression, alStatement, alStatementOption) ->
             ALExpressionVisitor.visit fn alExpression
             visit fn alStatement

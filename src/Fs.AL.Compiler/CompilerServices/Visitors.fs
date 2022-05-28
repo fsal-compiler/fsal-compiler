@@ -3,9 +3,18 @@
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler
 
+[<RequireQualifiedAccess>]
+type ExpressionContext =
+    | None
+    | Sequential of chain:FSharpExpr list
+
 /// does not go further into recursive member calls
-let rec visitFunctionBody f (e:FSharpExpr) = 
+let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
     f e
+    let visitFunctionBody = visitFunctionBody g
+    let visitOuterExprs = visitOuterExprs g
+    let visitObjArg = visitObjArg g
+    let visitObjMember = visitObjMember g
     match e with 
     | FSharpExprPatterns.AddressOf(lvalueExpr) -> 
         visitFunctionBody f lvalueExpr
@@ -60,8 +69,20 @@ let rec visitFunctionBody f (e:FSharpExpr) =
         visitFunctionBody f objExpr
     | FSharpExprPatterns.FSharpFieldSet(objExprOpt, recordOrClassType, fieldInfo, argExpr) -> 
         visitObjArg f objExprOpt; visitFunctionBody f argExpr
-    | FSharpExprPatterns.Sequential(firstExpr, secondExpr) -> 
-        visitFunctionBody f firstExpr; visitFunctionBody f secondExpr
+    | FSharpExprPatterns.Sequential(firstExpr, secondExpr) ->
+//        let start = [firstExpr]
+//        let rec chainedSequentials acc secondary =
+//            match secondary with
+//            | FSharpExprPatterns.Sequential(curr,nextExpr) ->
+//                let newacc = (curr) :: acc
+//                chainedSequentials newacc nextExpr
+//            | _ -> acc
+//        let chain = chainedSequentials start secondExpr
+//        let exprChain = firstExpr :: secondExpr :: secondExpr.ImmediateSubExpressions
+//        g (ExpressionContext.Sequential exprChain)
+//        let test = 5
+        visitFunctionBody f firstExpr
+        visitFunctionBody f secondExpr
     | FSharpExprPatterns.TryFinally(bodyExpr, finalizeExpr, debug1, debug2) -> 
         visitFunctionBody f bodyExpr; visitFunctionBody f finalizeExpr
     | FSharpExprPatterns.TryWith(bodyExpr, _, _, catchVar, catchExpr, debug1, debug2) -> 
@@ -89,11 +110,13 @@ let rec visitFunctionBody f (e:FSharpExpr) =
         List.iter (visitObjMember f) overrides
         List.iter (snd >> List.iter (visitObjMember f)) interfaceImplementations
     | FSharpExprPatterns.TraitCall(sourceTypes, traitName, typeArgs, typeInstantiation, argTypes, argExprs) -> 
-        visitOuterExprs f argExprs
+        visitOuterExprs  f argExprs
     | FSharpExprPatterns.ValueSet(valToSet, valueExpr) -> 
-        visitFunctionBody f valueExpr
+//        visitFunctionBody f valueExpr
+        ()
     | FSharpExprPatterns.WhileLoop(guardExpr, bodyExpr, debug1) -> 
-        visitFunctionBody f guardExpr; visitFunctionBody f bodyExpr
+//        visitFunctionBody f guardExpr; visitFunctionBody f bodyExpr
+        ()
     | FSharpExprPatterns.BaseValue baseType -> ()
     | FSharpExprPatterns.DefaultValue defaultType -> ()
     | FSharpExprPatterns.ThisValue thisType -> ()
@@ -101,18 +124,22 @@ let rec visitFunctionBody f (e:FSharpExpr) =
     | FSharpExprPatterns.Value(valueToGet) -> ()
     | _ -> failwith (sprintf "unrecognized %+A" e)
 
-and visitOuterExprs f exprs = 
-    List.iter (visitFunctionBody f) exprs
-and visitObjArg f objOpt = 
-    Option.iter (visitFunctionBody f) objOpt
-and visitObjMember f memb = 
-    visitFunctionBody f memb.Body
+and visitOuterExprs g f exprs = 
+    List.iter (visitFunctionBody g f) exprs
+and visitObjArg g f objOpt = 
+    Option.iter (visitFunctionBody g f) objOpt
+and visitObjMember g f memb = 
+    visitFunctionBody g f memb.Body
     
     
 
 /// basic visitor
-let rec visitExpr f (e:FSharpExpr) = 
+let rec visitExpr (g:ExpressionContext -> unit) f (e:FSharpExpr) = 
     f e
+    let visitExpr = visitExpr g
+    let visitObjArg = visitObjArg g
+    let visitObjMember = visitObjMember g
+    let visitExprs fn exprs = List.iter (visitExpr fn) exprs
     match e with 
     | FSharpExprPatterns.AddressOf(lvalueExpr) -> 
         visitExpr f lvalueExpr
@@ -205,9 +232,9 @@ let rec visitExpr f (e:FSharpExpr) =
     | FSharpExprPatterns.Value(valueToGet) -> ()
     | _ -> failwith (sprintf "unrecognized %+A" e)
 
-and visitExprs f exprs = 
-    List.iter (visitExpr f) exprs
-
+//and visitExprs f exprs = 
+//    List.iter (visitExpr f) exprs
+//
 
 let printast body =
 //    System.IO.File.AppendAllText(@"C:\Temp\fsallog.txt","test:\n")

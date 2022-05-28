@@ -17,6 +17,7 @@ type ALSimpleType =
     | Decimal
     | Char
     | Option of values: string list
+    | List of listArg : ALSimpleType
     | Integer
     
 type ALComplexType =    

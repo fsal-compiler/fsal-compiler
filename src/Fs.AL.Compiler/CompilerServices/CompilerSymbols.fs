@@ -125,6 +125,13 @@ module FSharpEntity =
         |> Type.GetType
         |> Activator.CreateInstance
         
+    let tryGetType (x:t) =
+        let ctor =
+            x.MembersFunctionsAndValues
+            |> Seq.tryFind (fun f -> f.IsConstructor )
+            |> Option.bind (fun f -> f.FullTypeSafe )
+            |> Option.map (fun f -> f.GenericArguments[1] )
+        ctor
 //    let isALType (x:t) =
 //        match x.BaseType with
 //        | None -> false

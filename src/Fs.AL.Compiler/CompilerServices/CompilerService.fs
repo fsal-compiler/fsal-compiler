@@ -247,7 +247,7 @@ let getDefaultProjectDeclarations settings (fsprojPath: string) =
     //let projfiles = project.ProjectFiles.Value
     let projOpts = FSharpProjectOptions.ofProject settings project 
     let checkResults = project.GetCheckResults(projOpts)
-
+    
     let implementations = checkResults.AssemblyContents.ImplementationFiles
     
     // TODO: certain parts still require implementation for optimized assembly

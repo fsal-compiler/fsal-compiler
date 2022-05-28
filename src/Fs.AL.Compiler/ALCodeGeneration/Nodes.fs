@@ -20,8 +20,30 @@ module Codeunit =
 
 module TypeReference =
     
+    module t = Common.Trivia
     let create (name:ALType) : TypeReferenceBaseSyntax =
         match name with
+        | Simple (List lt) ->
+            let inner =
+                Simple lt
+                |> ALType.toString
+                |> sf.ParseToken
+    //            |> sf.ObjectNameOrId
+                |> sf.SimpleNamedDataType
+            
+            let okt = sf.Token(sk.OfKeyword)|> t.wts
+            let opb = sf.Token(sk.OpenBracketToken)
+            let closebrace = sf.Token(sk.CloseBracketToken) |> t.wts
+            let typename = sf.ParseToken("List") |> t.wts
+            let listt =
+                sf.GenericNamedDataType(typename)
+                    .WithOfKeyword(okt)
+                    .WithOpenBracketToken(opb)
+                    .WithCloseBracketToken(closebrace)
+                    .WithTypeArguments(SeparatedSyntaxList.ofDataTypeSyntax inner)
+            listt
+            |> sf.SimpleTypeReference
+            :> TypeReferenceBaseSyntax
         | Complex (Record name) ->
             let a = 5
 //            let recname = name |> sf.ParseToken
@@ -32,6 +54,16 @@ module TypeReference =
             let st = sf.SubtypedDataType(reckeyword,objnameorid)
             let str = sf.RecordTypeReference(st)
             str :> TypeReferenceBaseSyntax
+        | Complex (Codeunit name) ->
+            let coe = sf.IdentifierName $"{name}"
+            let objnameorid = sf.ObjectNameOrId(coe)
+            let reckeyword = sf.ParseToken("Codeunit").WithTrailingTrivia(sf.Space).WithLeadingTrivia(sf.Space)
+//            let reckeyword = sf.Token(sk.RecordTypeReference).WithTrailingTrivia(sf.Space)
+            let st = sf.SubtypedDataType(reckeyword,objnameorid)
+            sf.SimpleTypeReference(st)
+            |> (fun f -> f.WithLeadingTrivia(sf.Space))
+//            let str = sf.RecordTypeReference(st)
+//            st :> TypeReferenceBaseSyntax
         | _ ->
             name
             |> ALType.toString
@@ -45,6 +77,7 @@ module TypeReference =
         
 module VariableDeclaration =
     let create (name:string) (typeref:TypeReferenceBaseSyntax) =
+        let d = 5
         sf.VariableDeclaration(name,typeref)
         :> VariableDeclarationBaseSyntax
         |> (fun f -> f.WithLeadingTrivia(Trivia.lf8spaces))

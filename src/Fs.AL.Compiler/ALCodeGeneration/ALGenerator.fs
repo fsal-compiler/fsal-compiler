@@ -15,9 +15,10 @@ open Microsoft.Dynamics.Nav.CodeAnalysis
 open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
 open Microsoft.FSharp.Linq.RuntimeHelpers
 open Nodes
-
+module t = Common.Trivia
 type private sf = Microsoft.Dynamics.Nav.CodeAnalysis.SyntaxFactory
 type private sk = Microsoft.Dynamics.Nav.CodeAnalysis.SyntaxKind
+
 
 let rec buildUnaryExpression (op,a1) : CodeExpressionSyntax =
     match op with
@@ -116,6 +117,7 @@ let rec buildExpression (exp:ALExpression) : ExpressionSyntax =
         alExp
     | FSharpLambda(newVariable, alExpression) ->
         buildExpression alExpression
+        
 
     | x -> failwithf $"%A{x}"        
 
@@ -207,11 +209,25 @@ let rec buildStatements acc (statements:ALStatement list) =
     | head::tail ->
         match head with
         | Expression fsalExp ->
-            if fsalExp = (FSALExpr Ignore) then buildStatements acc tail else
-            let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
-            let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
-            let d = 5
-            buildStatements (statement::acc) tail
+            match fsalExp with
+            | FSALExpr Ignore ->  buildStatements acc tail
+            | FSALExpr (StatementExpr alStatement) ->
+//                let al_exp = ALExpression.ofALStatement alStatement
+//                let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
+                let buildstat = buildStatements [] [alStatement] |> List.head
+//                let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
+                buildStatements (buildstat::acc) tail
+            | NaryExpression alNaryExpression ->
+                let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
+                let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
+                buildStatements (statement::acc) tail
+            | Binary (left,op,right) ->
+                let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
+                let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
+                buildStatements (statement::acc) tail
+            | _ -> failwith "test"
+                
+            
         | Assignment(alExpression, FSALExpr (StatementExpr alStatement)) ->
             //todo: unwrap assignment
             match alStatement with
@@ -293,6 +309,47 @@ let rec buildStatements acc (statements:ALStatement list) =
                     .WithCloseParenthesisToken(sf.Token(sk.CloseParenToken))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
             buildStatements (exitstatement::acc) tail
+        | ForLoop(initval, endval, doStatement, isUp) ->
+            let loopvar = sf.IdentifierName("i")
+            let doStatementExpanded =
+                match doStatement with
+                | FSALExpr (StatementExpr alStatement) ->
+                    match alStatement with
+                    | Assignment(alExpression, expression) -> 
+                        ALStatementImpl.createAssignment (alExpression,expression)
+                    | _ -> failwith "invalid statement"
+                | _ -> failwith "invalid statement"
+            
+            let sad123 = 5
+            let l1_idf : CodeExpressionSyntax = loopvar
+            let l2_init  =
+                match initval with
+                | Constant o ->
+                    let intv : int = unbox o
+                    sf.Literal(intv)
+                    |> sf.Int32SignedLiteralValue
+                    |> sf.LiteralExpression
+                | _ -> failwith ""
+            let l4_end = buildExpression endval :?> CodeExpressionSyntax
+            let statement =        
+                sf.ForStatement(
+                    loopvar,
+                    l2_init,
+                    sf.Token(sk.AssignToken),
+                    l4_end,
+                    doStatementExpanded)
+            buildStatements (statement::acc) tail
+        | WhileLoop(fsal_guard, fsal_do) ->
+            let al_guard = fsal_guard |> buildExpression :?> CodeExpressionSyntax
+            let al_do =
+                fsal_do |> ALStatement.ofExpression
+                |> (fun f -> buildStatements [] [f] )
+                |> List.head
+            let statement =
+                sf.WhileStatement(al_guard, al_do.WithLeadingTrivia(Trivia.lf12spaces))
+                    .WithDoKeywordToken(sf.Token(sk.DoKeyword) |> (t.wls >> t.wts))
+                    .WithWhileKeywordToken(sf.Token(sk.WhileKeyword) |> t.wts)
+            buildStatements (statement::acc) tail 
         | x -> failwithf $"%A{x}"
     
 

@@ -18,6 +18,7 @@ module ALType =
     let rec ofFSharpType (ftype:FSharpType) =
         let fullname =
             ftype |> FSharpType.getFullName
+        let t5 = 5
         match fullname with
         | FullNameFSharp.ref -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.byref" -> ftype.GenericArguments[0] |> ofFSharpType
@@ -28,6 +29,19 @@ module ALType =
             match arrayof with
             | Simple (SimpleType "JsonToken") -> Simple (SimpleType "JsonArray")
             | _ -> failwith "unimplemented"
+        | "System.Collections.Generic.List" ->
+            let listof = ftype.GenericArguments[0] |> ofFSharpType
+            match listof with
+            | Simple (SimpleType "JsonToken") -> Simple (SimpleType "JsonArray")
+            | Simple (st) -> Simple (List st)
+            | x -> failwith $"invalid AL list, use an array? %A{x}"
+        | "System.Collections.Generic.List`1.Enumerator" ->
+            // todo: create seq type
+            let listof = ftype.GenericArguments[0] |> ofFSharpType
+            match listof with
+            | Simple (SimpleType "JsonToken") -> Simple (SimpleType "JsonArray")
+            | Simple (st) -> Simple (List st)
+            | x -> failwith $"invalid AL list, use an array? %A{x}"
         // types inherited from type system
         | x when ftype |> FSharpType.hasBaseType<ALCode> -> Simple (Code None)
         | x when ftype |> FSharpType.hasBaseType<ALCodeunit> ->
@@ -76,10 +90,11 @@ module ALType =
             | ComplexType typename -> typename
             | Variant -> nameof Variant
             | Record name -> name
+            | Codeunit name -> name
 //                match name |> Seq.exists (fun f -> quotechars |> Array.contains f )
 //                with
-//                | true ->  $"Record \"{name}\""
-//                | false -> $"Record {name}"
+//                | true ->  $"Codeunit \"{name}\""
+//                | false -> $"Codeunit {name}"
             | x ->
                 let d = 5
                 failwithf $"%A{x}"
@@ -91,6 +106,9 @@ module ALType =
             | Boolean -> nameof Boolean
             | Decimal -> nameof Decimal
             | Code lenOpt -> nameof Code
+            | List (listparam) ->
+                let lt = 5
+                "ListOf:" + listparam.ToString()
             | SimpleType typename ->
                 match typename with
                 | "JsonToken" -> "JsonToken"

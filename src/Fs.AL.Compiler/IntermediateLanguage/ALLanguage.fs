@@ -117,11 +117,14 @@ type ALNaryExpression =
 
 // Page 28 BNF grammar for statements
 type ALStatement =
-    | BeginEnd of ALStatement
+    | Block of ALStatement
     | Sequence of ALStatement*ALStatement
     | Assignment of target:ALExpression * source:ALExpression
     | Expression of exp:ALExpression
-    | IfStatement of guard:ALExpression * ``then``:ALStatement * ``else``:ALStatement option   
+    | IfStatement of guard:ALExpression * ``then``:ALStatement * ``else``:ALStatement option
+    // TODO : case, while, repeat, for, with(?), foreach 
+    | ForLoop of assignment:ALExpression * exp:ALExpression * doStatement:ALExpression * isUp:bool  
+    | WhileLoop of guard:ALExpression * doStatement:ALExpression   
     | Exit of value:ALExpression
     with
     static member ofExpression (exp:ALExpression) =
@@ -145,8 +148,8 @@ type ALStatement =
             exp |> ALExpression.replaceDecisionExpressions assign usedDecisions target mappingFunction decisions
             
         match statement with
-        | BeginEnd alStatement ->
-            BeginEnd (replaceStatement alStatement)
+        | Block alStatement ->
+            Block (replaceStatement alStatement)
         | Sequence(alStatement, statement) ->
             Sequence(replaceStatement alStatement, replaceStatement statement)
         | Assignment(alExpression, expression) ->

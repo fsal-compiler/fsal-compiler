@@ -3,6 +3,7 @@
 open System.Collections.Generic
 open System.Collections.ObjectModel
 open System.IO
+open System.Linq
 open System.Text.Json
 open System.Text.Json.Serialization
 open FSharp.Compiler.Symbols
@@ -12,6 +13,7 @@ open Fs.AL.Compiler.IntermediateLanguage.ALContext
 open Fs.AL.Compiler.IntermediateLanguage.FSharpExpressionsMapping
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Compiler.Reflection
+open Fs.AL.Compiler.Visitors
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
 
@@ -382,16 +384,18 @@ module ReadProcedureBody =
 
     
 
-let readProcedureBody (b:ALProcedureContext) body =
-    
-    body
-    |> Visitors.visitFunctionBody (fun e ->
+let readProcedureBody (b:ALProcedureContext) (body:FSharpExpr) =
+    let setctx = (fun f -> b.expressionContext <- f)
+    body 
+    |> Visitors.visitFunctionBody setctx (fun e ->
         if b.entity.DisplayName = "SharedRecordType" then
             let debug = 5
             ()
 //            Logger.logDebug $"readProcedureBody:"
 //            Visitors.printast e
-//        
+//
+        
+        
         match e with
         | FSharpExprPatterns.Let((binding, value, e), next) ->
             ReadProcedureBody.handleLetExpression b binding value next
@@ -414,8 +418,63 @@ let readProcedureBody (b:ALProcedureContext) body =
             let debug = 5
             ReadProcedureBody.handleConst b.statements b.localVariables x
             // return simple const value form fn
+        | FSharpExprPatterns.ValueSet(valToSet, valueExpr) -> 
+            let exp = valueExpr |> ALExpression.ofFSharpExpr b
+            Assignment(Identifier valToSet.DisplayName,exp)
+//            |> StatementExpr
+//            |> FSALExpr
+            |> b.statements.Add
+        | FSharpExprPatterns.FastIntegerForLoop(startExpr, limitExpr, consumeExpr, isUp, debug1, debug2) ->
+            let statementsAtStart = b.statements.Count
+            let start = startExpr |> ALExpression.ofFSharpExpr b
+            let limit = limitExpr |> ALExpression.ofFSharpExpr b
+            let consume = consumeExpr |> ALExpression.ofFSharpExpr b
+            
+            let pre_statement = b.statements.Last()
+            b.statements.Remove(pre_statement) |> ignore
+            
+            let rec exprChain (exp:FSharpExpr) =
+                exp ::
+                    exp.ImmediateSubExpressions
+                    |> List.collect (fun (f:FSharpExpr) -> exprChain f)
+            
+            let consomeChain = consumeExpr |> exprChain
+            let t = 5
+            match b.expressionContext with
+            | ExpressionContext.Sequential(statement) ->
+                
+                let newblock =
+                    Block
+                        
+                ()
+        
+            | _ ->                    
+            
+            let statementsatend = b.statements.Count
+            let asd5df =5 
+            let statement = 
+                ForLoop(
+                    start,
+                    limit,
+                    consume,
+                    isUp
+                )
+            statement |> b.statements.Add
+        | FSharpExprPatterns.WhileLoop(guardExpr, bodyExpr, debug1) ->
+            let t = 5
+            let al_Guard = guardExpr |> ALExpression.ofFSharpExpr b
+            let al_Body = bodyExpr |> ALExpression.ofFSharpExpr b 
+            WhileLoop(al_Guard,al_Body)
+            |> b.statements.Add
+        | FSharpExprPatterns.Sequential(curr,next) ->
+            printfn $"unhandled pattern: sequential"
+            ()
+        | FSharpExprPatterns.TryFinally(bodyExpr, finalizeExpr, debug1, debug2) ->
+            printfn $"unhandled pattern: tryfinally"
+            ()
         | x ->
-            let expt = x.Type
+            printfn $"unhandled pattern: %A{x.Type}"
+            let expt = x.ImmediateSubExpressions
             let debug = 5
             match x with
             | FSharpExprPatterns.Value(valueToGet) -> // return value

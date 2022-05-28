@@ -61,10 +61,17 @@ type ALObjectBuilder with
             }
       
         // for debugging      
-//        let onstatementAdd =
-//            procedureBuilder.statements.CollectionChanged
-//            |> Observable.filter (fun f -> f <> null )
-//            |> Observable.add (fun f -> ())
+        let onstatementAdd =
+            procedureBuilder.statements.CollectionChanged
+            |> Observable.filter (fun f -> f <> null )
+            |> Observable.add (fun f ->
+                let procb = procedureBuilder
+                let added = 5
+                ()
+            )
+        
+        let setprocContext =
+            (fun f -> procedureBuilder.expressionContext <- f)
                            
         let newcontext = ExpressionReader.readProcedureBody procedureBuilder body
         
