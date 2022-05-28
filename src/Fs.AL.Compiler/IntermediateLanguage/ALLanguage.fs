@@ -117,7 +117,7 @@ type ALNaryExpression =
 
 // Page 28 BNF grammar for statements
 type ALStatement =
-    | Block of ALStatement
+    | Block of ALStatement list
     | Sequence of ALStatement*ALStatement
     | Assignment of target:ALExpression * source:ALExpression
     | Expression of exp:ALExpression
@@ -148,8 +148,8 @@ type ALStatement =
             exp |> ALExpression.replaceDecisionExpressions assign usedDecisions target mappingFunction decisions
             
         match statement with
-        | Block alStatement ->
-            Block (replaceStatement alStatement)
+        | Block alExprs ->
+            Block (alExprs |> List.map replaceStatement )
         | Sequence(alStatement, statement) ->
             Sequence(replaceStatement alStatement, replaceStatement statement)
         | Assignment(alExpression, expression) ->

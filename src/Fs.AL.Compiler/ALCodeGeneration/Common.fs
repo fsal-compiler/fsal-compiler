@@ -8,6 +8,7 @@ open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
 type private sf = Microsoft.Dynamics.Nav.CodeAnalysis.SyntaxFactory
 
 module Trivia =
+    let _4spaces = [|sf.Space;sf.Space;sf.Space;sf.Space|]
     let lf4spaces = [|sf.Linefeed;sf.Space;sf.Space;sf.Space;sf.Space|]
     let lf8spaces = [|sf.Linefeed;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space|]
     let lf12spaces = [|sf.Linefeed;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space;sf.Space|]

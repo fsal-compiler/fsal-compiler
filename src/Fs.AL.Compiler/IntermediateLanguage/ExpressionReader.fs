@@ -463,9 +463,9 @@ let readProcedureBody (b:ALProcedureContext) (body:FSharpExpr) =
         | FSharpExprPatterns.WhileLoop(guardExpr, bodyExpr, debug1) ->
             let t = 5
             let al_Guard = guardExpr |> ALExpression.ofFSharpExpr b
-            let al_Body = bodyExpr |> ALExpression.ofFSharpExpr b 
-            WhileLoop(al_Guard,al_Body)
-            |> b.statements.Add
+            let al_Body = bodyExpr |> ALExpression.ofFSharpExpr b
+            let wl = WhileLoop(al_Guard,al_Body)
+            wl |> b.statements.Add
         | FSharpExprPatterns.Sequential(curr,next) ->
             printfn $"unhandled pattern: sequential"
             ()

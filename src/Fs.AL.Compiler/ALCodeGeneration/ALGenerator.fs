@@ -346,10 +346,25 @@ let rec buildStatements acc (statements:ALStatement list) =
                 |> (fun f -> buildStatements [] [f] )
                 |> List.head
             let statement =
-                sf.WhileStatement(al_guard, al_do.WithLeadingTrivia(Trivia.lf12spaces))
+                sf.WhileStatement(al_guard, al_do)
                     .WithDoKeywordToken(sf.Token(sk.DoKeyword) |> (t.wls >> t.wts))
                     .WithWhileKeywordToken(sf.Token(sk.WhileKeyword) |> t.wts)
-            buildStatements (statement::acc) tail 
+            buildStatements (statement::acc) tail
+        | Block exprs ->
+            let statements =
+                buildStatements [] exprs
+                |> List.map (fun f ->
+                    let currtrivia = f.GetLeadingTrivia()
+                    f.WithLeadingTrivia(currtrivia.AddRange(t._4spaces))
+                )
+            
+            let sl = sf.List(statements)
+            let statement =
+                sf.Block(sl)
+                    .WithBeginKeywordToken(sf.Token(sk.BeginKeyword))
+                    .WithEndKeywordToken(sf.Token(sk.EndKeyword).WithLeadingTrivia(Trivia.lf8spaces))
+                    .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+            buildStatements (statement::acc) tail
         | x -> failwithf $"%A{x}"
     
 

@@ -4,6 +4,7 @@ open System
 open Fs.AL.Compiler
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage.ALContext
+open Fs.AL.Compiler.Visitors
 open Fs.AL.Core.ALCoreValues
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
@@ -11,6 +12,17 @@ open Fs.AL.Compiler.Reflection
 open ALLanguage
 open Fs.AL.Core.Abstract
 open Microsoft.FSharp.Reflection
+
+module FSExpr =
+    
+    let groupSequentials (_curr:FSharpExpr) (_next:FSharpExpr) =
+        let rec chainedSequentials acc next' =
+            match next' with
+            | FSharpExprPatterns.Sequential(curr,nextExpr) ->
+                chainedSequentials (curr :: acc) nextExpr
+            | x -> x :: acc
+        let chain = chainedSequentials [_curr] _next
+        chain |> List.rev
 
 module JsonTokens =
     
@@ -524,16 +536,25 @@ module ALExpression =
 //            Ignore
         | FSharpExprPatterns.Sequential(firstExpr, secondExpr) ->
             let s = 5
-             
-            let alexpr = firstExpr |> ofFSharpExpr b
-            let expr = secondExpr |> ofFSharpExpr b
-            match firstExpr with
-            | FSharpExprPatterns.Const(constValueObj, constType)
-                when constValueObj = null -> () //newline?
-            | _ ->
-                b.statements.Add(Expression alexpr) // add first
-             
-            expr
+            let grouped = FSExpr.groupSequentials firstExpr secondExpr
+//            match b.expressionContext with
+//            | ExpressionContext.Sequential chain ->
+//                let blockchain =
+//                    Block grouped
+//                
+//            | ExpressionContext.None ->
+//                ()
+//
+            let mapped = grouped |> List.map (ofFSharpExpr b >> ALStatement.ofExpression)
+            let block = Block mapped
+//            let alexpr = firstExpr |> ofFSharpExpr b
+//            let expr = secondExpr |> ofFSharpExpr b
+//            match firstExpr with
+//            | FSharpExprPatterns.Const(constValueObj, constType)
+//                when constValueObj = null -> () //newline?
+//            | _ ->
+//                b.statements.Add(Expression alexpr) // add first
+            FSALExpr (StatementExpr block) 
         | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) ->
             //todo:json-parsing:start
             // inner let expr
@@ -639,7 +660,7 @@ module ALStatementVisitor =
         | Sequence(alStatement, statement) ->
             visit fn alStatement
             visit fn statement
-        | Block alStatement -> visit fn alStatement
+        | Block alExpressions -> alExpressions |> List.iter (visit fn) 
         | IfStatement(alExpression, alStatement, alStatementOption) ->
             ALExpressionVisitor.visit fn alExpression
             visit fn alStatement
