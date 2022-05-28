@@ -333,11 +333,11 @@ let rec buildStatements acc (statements:ALStatement list) =
             let l4_end = buildExpression endval :?> CodeExpressionSyntax
             let statement =        
                 sf.ForStatement(
-                    loopvar,
-                    l2_init,
-                    sf.Token(sk.AssignToken),
-                    l4_end,
-                    doStatementExpanded)
+                    loopvar |> (t.wls >> t.wts),
+                    l2_init |> (t.wls >> t.wts),
+                    sf.Token(if isUp then sk.ToKeyword else sk.DownToKeyword),
+                    l4_end |> (t.wls >> t.wts),
+                    doStatementExpanded |> (t.wls >> t.wts))
             buildStatements (statement::acc) tail
         | WhileLoop(fsal_guard, fsal_do) ->
             let al_guard = fsal_guard |> buildExpression :?> CodeExpressionSyntax
@@ -347,8 +347,8 @@ let rec buildStatements acc (statements:ALStatement list) =
                 |> List.head
             let statement =
                 sf.WhileStatement(al_guard, al_do)
-                    .WithDoKeywordToken(sf.Token(sk.DoKeyword) |> (t.wls >> t.wts))
-                    .WithWhileKeywordToken(sf.Token(sk.WhileKeyword) |> t.wts)
+                    .WithDoKeywordToken(sf.Token(sk.DoKeyword) |> (t.wlst >> t.wtst) )
+                    .WithWhileKeywordToken(sf.Token(sk.WhileKeyword) |> t.wtst)
             buildStatements (statement::acc) tail
         | Block exprs ->
             let statements =
@@ -365,6 +365,11 @@ let rec buildStatements acc (statements:ALStatement list) =
                     .WithEndKeywordToken(sf.Token(sk.EndKeyword).WithLeadingTrivia(Trivia.lf8spaces))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
             buildStatements (statement::acc) tail
+        | Sequence(alStatement, alStatement2) ->
+            let statements =
+                buildStatements [] [alStatement;alStatement2]
+            buildStatements (statements @ acc) tail
+                
         | x -> failwithf $"%A{x}"
     
 

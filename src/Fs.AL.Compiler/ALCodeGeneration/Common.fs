@@ -16,8 +16,14 @@ module Trivia =
     let trailspace (token:#SyntaxNode) = token.WithTrailingTrivia(sf.Space)
 
     /// with trailing space
-    let wts (token:SyntaxToken) = token.WithTrailingTrivia(sf.Space)
-    let wls (token:SyntaxToken) = token.WithLeadingTrivia(sf.Space)
+    
+    let rec inline wTrailing model =
+        let wtt = (^a: (member WithTrailingTrivia : (SyntaxTrivia seq -> ^a)) model)
+        wtt([|sf.Space|])
+    let inline wls (token:_) = token.WithLeadingTrivia(sf.Space)
+    let inline wts (token:_) = token.WithTrailingTrivia(sf.Space)
+    let inline wlst (token:SyntaxToken) = token.WithLeadingTrivia(sf.Space)
+    let inline wtst (token:SyntaxToken) = token.WithTrailingTrivia(sf.Space)
     let wls4 (token:#SyntaxNode) = token.WithLeadingTrivia([|sf.Space;sf.Space;sf.Space;sf.Space|])
     
 

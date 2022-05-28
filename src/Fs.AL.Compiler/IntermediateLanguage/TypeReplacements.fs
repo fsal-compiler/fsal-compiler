@@ -56,9 +56,20 @@ let (|HasCoreLibType|_|) (s:string) =
     |> Option.map snd
     
    
+   
 
 let replacementFunctions : ( string * ((FSharpExpr -> ALExpression) -> FSharpExpr option -> obj -> FSharpExpr list -> ALExpression))[] =
     [|
+        // enumerator
+        "System.Collections.Generic.List.GetEnumerator",
+        (fun toAL obj mem args -> ALExpression.createMemberAccessInvocation (Identifier "_fs_enumerator") "GetEnumerator" [toAL obj.Value] )
+        "System.Collections.Generic.List`1.Enumerator.get_Current",
+        (fun toAL obj mem args -> ALExpression.createMemberAccessInvocation (Identifier "_fs_enumerator") "Current" [toAL obj.Value] )
+        "System.Collections.Generic.List`1.Enumerator.MoveNext",
+        (fun toAL obj mem args -> ALExpression.createMemberAccessInvocation (Identifier "_fs_enumerator") "MoveNext" [toAL obj.Value] )
+        "System.IDisposable.Dispose",
+        (fun toAL obj mem args -> FSALExpr Ignore)
+        // 
         "System.String.get_Length",
         (fun toAL obj mem args -> ALExpression.createInvocation "StrLen" [toAL obj.Value] )
         "System.Text.Json.JsonSerializer.Deserialize",

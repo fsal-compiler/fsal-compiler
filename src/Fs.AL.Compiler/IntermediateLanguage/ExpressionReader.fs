@@ -433,12 +433,12 @@ let readProcedureBody (b:ALProcedureContext) (body:FSharpExpr) =
             let pre_statement = b.statements.Last()
             b.statements.Remove(pre_statement) |> ignore
             
-            let rec exprChain (exp:FSharpExpr) =
-                exp ::
-                    exp.ImmediateSubExpressions
-                    |> List.collect (fun (f:FSharpExpr) -> exprChain f)
-            
-            let consomeChain = consumeExpr |> exprChain
+//            let rec exprChain (exp:FSharpExpr) =
+//                exp ::
+//                    exp.ImmediateSubExpressions
+//                    |> List.collect (fun (f:FSharpExpr) -> exprChain f)
+//            
+//            let consomeChain = consumeExpr |> exprChain
             let t = 5
             match b.expressionContext with
             | ExpressionContext.Sequential(statement) ->
@@ -461,7 +461,6 @@ let readProcedureBody (b:ALProcedureContext) (body:FSharpExpr) =
                 )
             statement |> b.statements.Add
         | FSharpExprPatterns.WhileLoop(guardExpr, bodyExpr, debug1) ->
-            let t = 5
             let al_Guard = guardExpr |> ALExpression.ofFSharpExpr b
             let al_Body = bodyExpr |> ALExpression.ofFSharpExpr b
             let wl = WhileLoop(al_Guard,al_Body)
@@ -470,8 +469,10 @@ let readProcedureBody (b:ALProcedureContext) (body:FSharpExpr) =
             printfn $"unhandled pattern: sequential"
             ()
         | FSharpExprPatterns.TryFinally(bodyExpr, finalizeExpr, debug1, debug2) ->
-            printfn $"unhandled pattern: tryfinally"
-            ()
+            let al_body = bodyExpr |> ALExpression.ofFSharpExpr b |> ALStatement.ofExpression 
+            let al_finalize = finalizeExpr |> ALExpression.ofFSharpExpr b |> ALStatement.ofExpression 
+            let wl = Sequence(al_body,al_finalize)
+            wl |> b.statements.Add
         | x ->
             printfn $"unhandled pattern: %A{x.Type}"
             let expt = x.ImmediateSubExpressions

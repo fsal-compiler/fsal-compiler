@@ -2,6 +2,7 @@ module rec Fs.AL.Compiler.IntermediateLanguage.FSharpExpressionsMapping
 
 open System
 open Fs.AL.Compiler
+open Fs.AL.Compiler.CompilerServices
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage.ALContext
 open Fs.AL.Compiler.Visitors
@@ -13,16 +14,6 @@ open ALLanguage
 open Fs.AL.Core.Abstract
 open Microsoft.FSharp.Reflection
 
-module FSExpr =
-    
-    let groupSequentials (_curr:FSharpExpr) (_next:FSharpExpr) =
-        let rec chainedSequentials acc next' =
-            match next' with
-            | FSharpExprPatterns.Sequential(curr,nextExpr) ->
-                chainedSequentials (curr :: acc) nextExpr
-            | x -> x :: acc
-        let chain = chainedSequentials [_curr] _next
-        chain |> List.rev
 
 module JsonTokens =
     
@@ -297,7 +288,7 @@ module ALExpression =
 //        Logger.logDebug $"ofFSharpExpr: {exp.Type}"
         match exp with
         | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, argExprs) ->
-            
+            let sym_memberOrFunc = memberOrFunc :> FSharpSymbol
             let d = 5
             if memberOrFunc.IsPropertySetterMethod || memberOrFunc.IsImplicitConstructor then
                 let prop =
@@ -318,7 +309,7 @@ module ALExpression =
                 FSALExpr (Ignore)
             else
             
-//            let rootfullname = memberOrFunc :> FSharpSymbol
+            let rootfullname = memberOrFunc :> FSharpSymbol
             let f = 5
             
             let fullname1 = memberOrFunc.FullName
@@ -327,16 +318,23 @@ module ALExpression =
             //let altgt = objExprOpt |> Option.map (ALExpression.ofFSharpExpr throwawayctx)
             match fullname1 with
             | TypeReplacements.HasReplacementFunction (ofFSharpExpr b) objExprOpt memberOrFunc argExprs result ->
+                let r = 5
                 let replacement = result (ofFSharpExpr b) objExprOpt memberOrFunc argExprs
                 match replacement with
+                | NaryExpression (Invocation(Binary(_tgt, _memberaccess, _member), _args)) ->
+                    match _tgt with
+                    | Identifier "_fs_enumerator" ->
+                        ALProcedureContext.ensureHasVariable b
+                            {
+                                ALVariable.isMutable = false
+                                name = "_fs_enumerator"
+                                altype = ALType.Complex (Codeunit "FS_Enumerator")
+                            }
+                        replacement
+                    | _ -> replacement
                 | FSALExpr (InvocationWithoutLastArg (tgt,methodname,args )) ->
-                    // response.details.profile
-                    let test = 5
-//                    failwithf $"%A{test}"
                     replacement
                 | _ -> replacement
-//                    JsonTokens.handleSelectToken b letBinding tgt methodname args
-                    // 
             | FSharpOperators.HasFSharpOperator b argExprs result -> result
             | x when objExprOpt.IsSome ->
                 // TODO: handle new union case
@@ -535,29 +533,14 @@ module ALExpression =
             Identifier "returnVal"
 //            Ignore
         | FSharpExprPatterns.Sequential(firstExpr, secondExpr) ->
-            let s = 5
             let grouped = FSExpr.groupSequentials firstExpr secondExpr
-//            match b.expressionContext with
-//            | ExpressionContext.Sequential chain ->
-//                let blockchain =
-//                    Block grouped
-//                
-//            | ExpressionContext.None ->
-//                ()
-//
             let mapped = grouped |> List.map (ofFSharpExpr b >> ALStatement.ofExpression)
             let block = Block mapped
-//            let alexpr = firstExpr |> ofFSharpExpr b
-//            let expr = secondExpr |> ofFSharpExpr b
-//            match firstExpr with
-//            | FSharpExprPatterns.Const(constValueObj, constType)
-//                when constValueObj = null -> () //newline?
-//            | _ ->
-//                b.statements.Add(Expression alexpr) // add first
             FSALExpr (StatementExpr block) 
         | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) ->
             //todo:json-parsing:start
             // inner let expr
+            
             let last =  b.localVariables |> Seq.last
             let varToAdd =
                 {
@@ -574,14 +557,16 @@ module ALExpression =
                     b bindingVar target method args
                 |> (fun f -> FSALExpr (FSALMappingExpr.StatementExpr f))
 //                FSALExpr Ignore
-            | _ ->                
+            | _ ->
             let innerstatement = Assignment (assignedTo, assignment)
-            // json := 'sometext';
-            b.statements.Add (innerstatement)
-            // declare the json token variable
+            let bodyexpr = bodyExpr |> ofFSharpExpr b |> ALStatement.ofExpression
             varToAdd |> b.localVariables.Add
-            let a1 = 5
-            bodyExpr |> ofFSharpExpr b
+            let blockexpr = Block [ innerstatement ; bodyexpr ]
+            blockexpr
+            |> StatementExpr  
+            |> FSALExpr
+            // json := 'sometext';
+            
             
         | FSharpExprPatterns.ValueSet(valToSet, valueExpr) ->
             let t = 5
@@ -617,6 +602,12 @@ module ALExpression =
                        (ALExpression.ofFSharpExpr b)
                        decisionTargets
             expressionWithDecisions
+        | FSharpExprPatterns.WhileLoop(guardExpr, bodyExpr, debug1) ->
+            let tf = 5 
+            let al_Guard = guardExpr |> ALExpression.ofFSharpExpr b
+            let al_Body = bodyExpr |> ALExpression.ofFSharpExpr b
+            let wl = WhileLoop(al_Guard,al_Body)
+            wl |> StatementExpr |> FSALExpr
         | x -> failwithf $"%A{x}"
         
 

@@ -14,6 +14,7 @@
         <Compile Include="CompilerServices\CompilerService.fs" />
         <Compile Include="CompilerServices\CompilerSymbols.fs" />
         <Compile Include="CompilerServices\CompilerDeclarations.fs" />
+        <Compile Include="CompilerServices\FSExpr.fs" />
         <Compile Include="CompilerServices\Visitors.fs" />
         <Compile Include="IntermediateLanguage\ALLanguage.fs" />
         <Compile Include="IntermediateLanguage\TypeReplacements.fs" />

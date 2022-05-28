@@ -31,10 +31,10 @@ module TypeReference =
     //            |> sf.ObjectNameOrId
                 |> sf.SimpleNamedDataType
             
-            let okt = sf.Token(sk.OfKeyword)|> t.wts
+            let okt = sf.Token(sk.OfKeyword)|> t.wtst
             let opb = sf.Token(sk.OpenBracketToken)
-            let closebrace = sf.Token(sk.CloseBracketToken) |> t.wts
-            let typename = sf.ParseToken("List") |> t.wts
+            let closebrace = sf.Token(sk.CloseBracketToken) 
+            let typename = sf.ParseToken("List") |> (t.wlst >> t.wtst)
             let listt =
                 sf.GenericNamedDataType(typename)
                     .WithOfKeyword(okt)

@@ -55,3 +55,19 @@ type ALRecordFieldContext =
         length = None
         properties = []
     }
+    
+    
+module ALProcedureContext =
+    
+    let private addIfNotExists b item ifNot =
+        let alVariableOption = 
+            b.localVariables
+            |> Seq.tryFind (fun f -> f.name = item)
+        match alVariableOption with  
+        | Some _ -> ()
+        | None -> b.localVariables.Add(ifNot)
+        
+        
+    let ensureHasVariable (b:ALProcedureContext) var =
+        addIfNotExists b var.name var
+            

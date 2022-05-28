@@ -2,6 +2,7 @@
 
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler
+open Fs.AL.Compiler.CompilerServices
 
 [<RequireQualifiedAccess>]
 type ExpressionContext =
@@ -44,7 +45,15 @@ let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
         visitFunctionBody f bodyExpr
     | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) -> 
 //        visitALExpr f bindingExpr
-        visitFunctionBody f bodyExpr
+        //TODO: seq
+//        match bodyExpr with
+//        | FSharpExprPatterns.Sequential(curr,next) ->
+////            let grouped = FSExpr.groupSequentials curr next
+////            grouped
+//            let asdf = 1
+//            ()
+//        | _ ->
+            visitFunctionBody f bodyExpr
     | FSharpExprPatterns.LetRec(recursiveBindings, bodyExpr) ->
         List.iter (fun (z,x,c) -> visitFunctionBody f x) recursiveBindings; visitFunctionBody f bodyExpr
     | FSharpExprPatterns.NewArray(arrayType, argExprs) -> 
@@ -70,21 +79,11 @@ let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
     | FSharpExprPatterns.FSharpFieldSet(objExprOpt, recordOrClassType, fieldInfo, argExpr) -> 
         visitObjArg f objExprOpt; visitFunctionBody f argExpr
     | FSharpExprPatterns.Sequential(firstExpr, secondExpr) ->
-//        let start = [firstExpr]
-//        let rec chainedSequentials acc secondary =
-//            match secondary with
-//            | FSharpExprPatterns.Sequential(curr,nextExpr) ->
-//                let newacc = (curr) :: acc
-//                chainedSequentials newacc nextExpr
-//            | _ -> acc
-//        let chain = chainedSequentials start secondExpr
-//        let exprChain = firstExpr :: secondExpr :: secondExpr.ImmediateSubExpressions
-//        g (ExpressionContext.Sequential exprChain)
-//        let test = 5
         visitFunctionBody f firstExpr
         visitFunctionBody f secondExpr
     | FSharpExprPatterns.TryFinally(bodyExpr, finalizeExpr, debug1, debug2) -> 
-        visitFunctionBody f bodyExpr; visitFunctionBody f finalizeExpr
+//        visitFunctionBody f bodyExpr; visitFunctionBody f finalizeExpr
+        ()
     | FSharpExprPatterns.TryWith(bodyExpr, _, _, catchVar, catchExpr, debug1, debug2) -> 
         visitFunctionBody f bodyExpr; visitFunctionBody f catchExpr
     | FSharpExprPatterns.TupleGet(tupleType, tupleElemIndex, tupleExpr) -> 
