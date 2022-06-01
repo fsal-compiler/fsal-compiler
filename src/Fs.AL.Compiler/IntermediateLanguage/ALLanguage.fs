@@ -65,6 +65,8 @@ type ALExpression =
             | Expression alExpression -> alExpression 
             | _ -> failwith "statement is not an expression"
              
+        
+            
         /// todo: needs refactoring
         static member replaceDecisionExpressions
             (assign: bool)
@@ -136,10 +138,45 @@ type ALStatement =
     | WhileLoop of guard:ALExpression * doStatement:ALExpression   
     | Exit of value:ALExpression
     with
+    
+    /// replaces Assignment statement identifier
+    static member withAssignmentIdentifier (newIdentifier:string) assignmentStatement =
+        let dasdasd = 1
+        match assignmentStatement with
+        | Assignment(Binary(tgtId, MemberAccess, memberId), bindVal) ->
+            Assignment(Binary(Identifier newIdentifier, MemberAccess, memberId), bindVal)
+        | Assignment (tgt, bindVal) ->
+            Assignment(Identifier newIdentifier, bindVal)
+        | _ -> failwith "not a valid AL assigment expr"
+        
+    static member withoutNullStatements statements =
+        statements |> List.where (fun f ->
+            match f with
+            | ALStatement.Expression (Constant null) -> false 
+            | _ -> true
+        )
+        
+    static member withAssignmentTarget (targetExp:ALExpression) assignmentStatement =
+        match assignmentStatement with
+        | Assignment (tgt, assignment) ->
+            Assignment(tgt, targetExp)
+        | _ -> failwith "not a valid AL assigment expr"
+        
+    /// unwraps block statements
+    static member toStatements assignmentStatement =
+        match assignmentStatement with
+        | Block (statements) -> statements
+        | _ -> failwith "not a valid block statement"
+        
+    static member getLastStatement (statements:'t list) =
+        statements[..statements.Length - 2],statements[statements.Length - 1]
+        
+    static member toBlock statements = Block statements
     static member collectSequences acc (stat:ALStatement) =
         match stat with
         | Sequence(alStatement, statement) ->
-            ALStatement.collectSequences (alStatement :: acc) statement
+            let left = ALStatement.collectSequences acc alStatement
+            ALStatement.collectSequences (left) statement
         | stat ->
             stat :: acc
          
@@ -233,6 +270,11 @@ type ALStatement =
                     thenx |> ALExpression.ofALStatement |> Exit,
                     elsex |> Option.map (ALExpression.ofALStatement >> Exit)
                 )
+            | Block alStatements ->
+                let prec,last = ALStatement.getLastStatement alStatements
+                let newBlockStatements =
+                    prec @ [Exit(last |> ALExpression.ofALStatement)]
+                Block newBlockStatements
             | Exit alExpression ->
                 failwith "statement already has exit"
             | _ -> failwith "unimplemented exit condition"

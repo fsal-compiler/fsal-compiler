@@ -418,14 +418,19 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
                     .WithWhileKeywordToken(sf.Token(sk.WhileKeyword) |> t.wtst)
             buildStatements level (statement::acc) tail
         | Block exprs ->
-            let statements =
+            let statements' =
                 buildStatements level [] exprs
                 |> List.map (fun f ->
                     let currtrivia = f.GetLeadingTrivia()
                     f.WithLeadingTrivia(currtrivia.AddRange(t._4spaces))
                 )
             
-            let sl = sf.List(statements)
+            let sl =
+                if level = 0
+                then sf.List(statements' |> List.rev)
+                else
+                    let test = 5
+                    sf.List(statements')
             let statement =
                 sf.Block(sl)
                     .WithBeginKeywordToken(sf.Token(sk.BeginKeyword))

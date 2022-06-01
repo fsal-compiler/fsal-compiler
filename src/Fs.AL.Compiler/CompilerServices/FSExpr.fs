@@ -40,6 +40,8 @@ module FSExpr =
         | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) -> $"DecisionTree:{decisionExpr.Range.Start}"
         | FSharpExprPatterns.DecisionTreeSuccess (decisionTargetIdx, decisionTargetExprs) -> $"DecisionTreeSuccess:{decisionTargetIdx}"
         | FSharpExprPatterns.IfThenElse (guardExpr, thenExpr, elseExpr) -> $"IfThenElse:{guardExpr.Range.Start}"
+        | FSharpExprPatterns.NewObject(objType, typeArgs, argExprs) -> $"NewObject:{objType}"
+            
 
         | v ->
             let vt = v

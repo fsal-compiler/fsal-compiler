@@ -257,7 +257,8 @@ module ALExpressionTranslation =
     [<RequireQualifiedAccess>]
     type LetExprKind =
         | Decision
-        | Declaration 
+        | Declaration
+        | Constructor 
         | Normal
     
     
@@ -268,7 +269,7 @@ module ALExpressionTranslation =
                 b.expressionContext
                 |> Seq.choose (fun f ->
                     match f with
-                    | ExpressionContext.DecisionTree(decisionExpr, alExpressions) ->
+                    | ALExprContext.DecisionTree(decisionExpr, alExpressions) ->
                         alExpressions |> Some
                     | _ -> None
                 )
@@ -294,54 +295,161 @@ module ALExpressionTranslation =
             if b.identifier = "assignment" then
                 let breakpoint = 1
                 ()
-                
-//            if b.expressionContext.Count > 5 then
-//                failwith "does not currently support inner let statements"
-//            else
-//            
-            let context = ExpressionContext.LetBinding (bindingVar,bindingExpr) 
+
+            let context = ALExprContext.LetBinding (bindingVar,bindingExpr) 
             b.expressionContext.Add(context)
             let f = 5
-            let bindingCtx = 
+            // determine let expression kind
+            let bindingCtx,bindings =
                 match bindingExpr with
                 | FSharpExprPatterns.NewObject(objType, typeArgs, argExprs) ->
+                    // empty variable declaration
                     match argExprs with
-                    | [  ] when objType.IsConstructor -> LetExprKind.Declaration
-                    | [ x ] when objType.IsConstructor && x.Type |> FSharpType.isUnit -> LetExprKind.Declaration
+                    | [  ] when objType.IsConstructor -> LetExprKind.Declaration,bindingExpr |> ALExpression.ofFSharpExpr b
+                    | [ x ] when objType.IsConstructor && x.Type |> FSharpType.isUnit -> LetExprKind.Declaration,bindingExpr |> ALExpression.ofFSharpExpr b
                     | _ -> failwith ""
+                | FSharpExprPatterns.Let((bindingVarInner, _, _), _) -> 
+                    // constructor assignments
+                    let newIdentifier = "." + bindingVar.DisplayName
+                    ALExprContext.usingCtx (ALExprContext.Constructor newIdentifier) b 
+                        (fun f ->
+                        LetExprKind.Constructor,bindingExpr |> ALExpression.ofFSharpExpr b 
+                    )
                 | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) ->
                     let result = translateDecisionTree b bindingExpr
                     let v = 5
-                    LetExprKind.Decision
-                | _ -> LetExprKind.Normal
+                    LetExprKind.Decision,bindingExpr |> ALExpression.ofFSharpExpr b
+                | _ -> LetExprKind.Normal,bindingExpr |> ALExpression.ofFSharpExpr b
             // inner let expr
-            let last =  b.localVariables |> Seq.tryLast
+//                Assignment(
+//                    Identifier bindingVar.DisplayName,
+//                    
+//                )
+                
+            // declare AL variable
             let varToAdd = {
                 isMutable = false
                 name = bindingVar.DisplayName
                 altype = ALType.ofFSharpType bindingVar.FullType
             }
-//            if last = Some varToAdd then bodyExpr |> ALExpression.ofFSharpExpr b else
-//            Debug.Assert(Some varToAdd <> last)
-            let assignmentstatement =
-                Assignment(
-                    Identifier bindingVar.DisplayName,
-                    bindingExpr |> ALExpression.ofFSharpExpr b 
-                )
-            if last <> Some varToAdd then
-                //TODO: can currently add duplicates
-                varToAdd |> b.localVariables.Add
+            let declareVariable() =
+                let last =  b.localVariables |> Seq.tryLast
+                if last <> Some varToAdd then
+                    //TODO: can currently add duplicates
+                    varToAdd |> b.localVariables.Add
+                
             // next expr
             let fsalBodyExpr() = bodyExpr |> ALExpression.ofFSharpExpr b |> ALStatement.ofExpression
-            match bindingCtx with
-            | LetExprKind.Declaration ->
+            
+            match bindingCtx, bindingVar.IsCompilerGenerated with
+            | LetExprKind.Constructor,_ ->
+                declareVariable() // ctor return value name
+//                let ctorCtx = ALExprContext.getCtorCtx b |> Option.get
+                let bindingsExpr = bindings |> ALStatement.ofExpression
+                let test = 5
+                // declare variable with different name
+                let blockStatement,ctorReturnValue =
+                    match bindingsExpr with
+                    | Block alStatements ->
+                        alStatements[..alStatements.Length - 2]
+                        |> List.where (fun f ->
+                            match f with
+                            | ALStatement.Expression (Constant null) -> false 
+                            | _ -> true
+                        )
+                        |> Block , // assignment statements
+                        // assign returnVal
+                        Assignment(Identifier bindingVar.DisplayName,alStatements[alStatements.Length - 1] |> ALExpression.ofALStatement)
+                    | _ -> failwith "invalid constructor expr"
+                let f1233123 = 5
+                
+                let ctorInnerVariable =
+                    match ctorReturnValue with
+                    | Assignment(_, Identifier s) -> s 
+                    | _ -> failwithf $"%A{ctorReturnValue}"
+                
+                Sequence(
+                    blockStatement
+                    |> ALStatement.toStatements
+                    |> List.map (fun stmt -> stmt |> ALStatement.withAssignmentIdentifier ctorInnerVariable )
+                    |> ALStatement.toBlock,
+                    Sequence(
+                        ctorReturnValue |> ALStatement.withAssignmentTarget (Identifier ctorInnerVariable),
+                        fsalBodyExpr()
+                    )
+                )
+                |> ALExpression.fromALStatement
+//                Sequence(s1,fsalBodyExpr()) |> ALExpression.fromALStatement
+            | _, true ->
+                // compiler-generated constructor statements //
+                b.expressionContext.Remove(context) |> ignore // remove let statement context
+                
+                match ALExprContext.getCtorCtx b with
+                | None ->
+                    let assignmentsBlock =
+                        varToAdd |> b.localVariables.Add
+                        let asdasd = 5
+                        let statements = fsalBodyExpr() |> ALExpression.fromALStatement
+                        let assignStatements,returnStatement =
+                            ALStatement.collectSequencesLast (statements |> ALStatement.ofExpression)
+                            |> (fun (seqStatements,returnStatement) ->
+                                seqStatements
+                                |> ALStatement.withoutNullStatements
+                                |> List.map (fun statement ->
+                                    statement //|> ALStatement.withAssignmentIdentifier ctorCtx
+                                ),
+                                returnStatement
+//                                Identifier ctorCtx |> ALStatement.ofExpression
+                            )
+                        Block
+                            (assignStatements @
+                                [
+                                    // constructor expr return value
+                                    returnStatement
+                                ])
+                        |> ALExpression.fromALStatement
+                    assignmentsBlock
+                | Some ctorCtx ->   
+                    let assignmentsBlock =
+                        { varToAdd with name = ctorCtx} |> b.localVariables.Add
+                        let asdasd = 5
+                        let statements = fsalBodyExpr() |> ALExpression.fromALStatement
+                        let assignStatements,returnStatement =
+                            ALStatement.collectSequencesLast (statements |> ALStatement.ofExpression)
+                            |> (fun (seqStatements,returnStatement) ->
+                                seqStatements
+                                |> ALStatement.withoutNullStatements
+                                |> List.map (fun statement ->
+                                    statement |> ALStatement.withAssignmentIdentifier ctorCtx
+                                ),
+                                Identifier ctorCtx |> ALStatement.ofExpression
+                            )
+                            
+                        let asdasddfgfd =5
+                        Block
+                            (assignStatements @
+                                [
+                                    // constructor expr return value
+                                    returnStatement
+                                ])
+                        |> ALExpression.fromALStatement
+               
+                    assignmentsBlock
+            | LetExprKind.Declaration,false ->
+                declareVariable()
                 // skip empty bindings
-                let result = fsalBodyExpr() |> ALExpression.ofALStatement
                 b.expressionContext.Remove(context) |> ignore
+                let result = fsalBodyExpr() |> ALExpression.fromALStatement
                 result
             | _ ->
+                declareVariable()
                 b.expressionContext.Remove(context) |> ignore
-                Sequence(assignmentstatement,fsalBodyExpr()) |> ALExpression.fromALStatement
+                let assignmentStatement =
+                    Assignment(
+                        Identifier bindingVar.DisplayName,
+                        bindings                    
+                    )
+                Sequence(assignmentStatement,fsalBodyExpr()) |> ALExpression.fromALStatement
             
         | _ -> failwith "invalid expression"
     
@@ -354,7 +462,7 @@ module ALExpressionTranslation =
                     b.expressionContext
                     |> Seq.choose (fun f ->
                         match f with
-                        | ExpressionContext.LetBinding(valexpr, bindingExpr) ->
+                        | ALExprContext.LetBinding(valexpr, bindingExpr) ->
                             valexpr |> Some | _ -> None )
                     |> Seq.tryLast
                 let dafdsf =5 
@@ -375,11 +483,11 @@ module ALExpressionTranslation =
                         | None -> result 
                     )
             
-                let context2 = ExpressionContext.DecisionTree (decisionExpr,targets)
+                let context2 = ALExprContext.DecisionTree (decisionExpr,targets)
                 context2
             
-            let res = 
-                b |> ALProcedureContext.inExpressionContext context
+            let res =
+                ALExprContext.usingCtx context b
                     (fun f ->
                         let createdExpression = decisionExpr |> ALExpression.ofFSharpExpr b
                         let asd1 = 5
@@ -402,7 +510,7 @@ module ALExpressionTranslation =
             
             let assignedLetVar =
                 match b.expressionContext |> Seq.last with
-                | ExpressionContext.LetBinding(memberOrFunctionOrValue, bindingExpr) ->
+                | ALExprContext.LetBinding(memberOrFunctionOrValue, bindingExpr) ->
                     Some memberOrFunctionOrValue
                 | _ -> None
              
@@ -473,6 +581,19 @@ module ALExpression =
         | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) ->
             ALExpressionTranslation.translateDecisionTree b exp
         | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) ->
+            // fail if inner let expr
+            match bindingExpr with
+            | FSharpExprPatterns.Let((lBindVar, _, _), _) ->
+                match lBindVar.IsCompilerGenerated with
+                | true -> ()
+                | false -> 
+                    failwith
+                        ([
+                           "inner let expressions are currently not supported: "
+                           $"line:{lBindVar.DeclarationLocation.StartLine}"
+                           $"file:{lBindVar.DeclarationLocation.FileName}"
+                        ] |> String.concat "\n")
+            | _ -> () 
             let result = ALExpressionTranslation.translateLet b exp
             result 
             
@@ -480,6 +601,7 @@ module ALExpression =
             let sym_memberOrFunc = memberOrFunc :> FSharpSymbol
             let d = 5
             if memberOrFunc.IsPropertySetterMethod || memberOrFunc.IsImplicitConstructor then
+                let debug = 5
                 let prop =
                     memberOrFunc.DisplayName
                     |> (fun f -> f.Replace("`",""))
@@ -494,7 +616,7 @@ module ALExpression =
                     
                 let newval = (argExprs[0] |> ALExpression.ofFSharpExpr b)
                 let stat = Assignment(assignTo,newval)
-                stat |> ALExpression.ofALStatement 
+                stat |> ALExpression.fromALStatement 
             else
             
                 let rootfullname = memberOrFunc :> FSharpSymbol
@@ -689,7 +811,7 @@ module ALExpression =
             | FSALExpr (InvocationWithoutTarget (methodname,args)) ->
                 let target =
                     match b.expressionContext |> Seq.last with
-                    | ExpressionContext.LetBinding(memberOrFunctionOrValue, bindingExpr) ->
+                    | ALExprContext.LetBinding(memberOrFunctionOrValue, bindingExpr) ->
                         memberOrFunctionOrValue
                     | _ -> failwith "invalid binding"
                 ALExpression.createMemberAccessInvocation (Identifier target.DisplayName) methodname args

@@ -48,6 +48,10 @@ module ALType =
         | x when ftype |> FSharpType.hasBaseType<ALSimpleValue> -> Simple (SimpleType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
         | x when ftype |> FSharpType.hasBaseType<ALComplexValue> -> Complex (ComplexType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
         | x when ftype.TypeDefinition |> FSharpEntity.hasAttribute<ALJson> -> Simple (SimpleType "JsonToken") // use as json type
+        // todo: handle union type fields too
+        | x when ftype.TypeDefinition.IsFSharpUnion ->
+            let unioncase = ftype.TypeDefinition.UnionCases
+            Simple (SimpleType "JsonToken") // use as json type
         // System.** namespace types
         | TypeReplacements.HasCoreLibType mapping -> mapping
         // jsonprovider types
