@@ -4,6 +4,7 @@ open Fs.AL.Compiler.ALBuilder
 open Fs.AL.Compiler.ALCodeGeneration.Common
 open Fs.AL.Compiler.IntermediateLanguage
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
+open Fs.AL.Compiler.Visitors
 open Fs.AL.Core.ALCoreValues
 open Microsoft.Dynamics.Nav.CodeAnalysis
 open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
@@ -86,21 +87,6 @@ module VariableDeclaration =
 module VarSection =
     let create declarations = sf.VarSection(declarations).WithLeadingTrivia(Trivia.lf4spaces)
     
-
-module Block =
-    
-    let create statements =
-        let beginkw = sf.Token(SyntaxKind.BeginKeyword).WithLeadingTrivia(Trivia.lf4spaces)
-                          //.WithTrailingTrivia(sf.Linefeed)
-        let endkw = sf.Token(SyntaxKind.EndKeyword).WithLeadingTrivia(Trivia.lf4spaces)
-        sf.Block()
-            .WithBeginKeywordToken(beginkw)
-            .WithEndKeywordToken(endkw)
-            .WithStatements(statements)
-            .WithSemicolonToken(sf.Token(SyntaxKind.SemicolonToken))
-            .WithTrailingTrivia(sf.Linefeed)
-            
-
 module ParameterList =
     let withSemicolons (x:ParameterListSyntax) =
         let separators = x.Parameters.GetSeparators()
@@ -122,11 +108,25 @@ module ParameterList =
         
 module Procedure =
     
-    let create (name:string) parameters variables body returnval =
+    let create (name:string) parameters variables (body:BlockSyntax) returnval =
         let returnv =
             match returnval with
             | None -> null
-            | Some value -> sf.ReturnValue(TypeReference.create value)
+            | Some value ->
+                sf.ReturnValue(TypeReference.create value)
+//                let oldstatements = body.Statements
+//                let laststatement = body.Statements.Last() :?> ExpressionStatementSyntax
+//                let exitparam =
+//                    sf.ExitStatement(laststatement.Expression)
+//                        .WithOpenParenthesisToken(sf.Token(sk.OpenParenToken))
+//                        .WithCloseParenthesisToken(sf.Token(sk.CloseParenToken))
+//                        .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+//                let newStatements = oldstatements.Replace(laststatement,exitparam)
+//                body.WithStatements(newStatements);
+//                
+                
+            
+        
             
         let nametoken = sf.IdentifierName(name).WithLeadingTrivia(sf.Space)
         sf.MethodDeclaration(nametoken)

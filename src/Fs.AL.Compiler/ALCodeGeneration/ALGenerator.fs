@@ -1,6 +1,8 @@
 ﻿module rec Fs.AL.Compiler.ALCodeGeneration.ALGenerator
 
+open System.Collections.ObjectModel
 open System.IO
+open System.Linq.Expressions
 open Fs.AL.Compiler
 open Fs.AL.Compiler.ALBuilder
 open Fs.AL.Compiler.ALCodeGeneration.Common
@@ -80,6 +82,8 @@ let rec buildNaryExpression (exp:ALNaryExpression) =
 
 let rec buildExpression (exp:ALExpression) : ExpressionSyntax =
     match exp with
+    | FSALExpr (StatementExpr (Expression alExpression)) ->
+        buildExpression alExpression
     | NaryExpression naryExp ->
         let alexp = naryExp |> buildNaryExpression
         alexp :> ExpressionSyntax
@@ -117,14 +121,25 @@ let rec buildExpression (exp:ALExpression) : ExpressionSyntax =
         alExp
     | FSharpLambda(newVariable, alExpression) ->
         buildExpression alExpression
-        
-
     | x -> failwithf $"%A{x}"        
 
 
 /// map expressions from intermediate language to AL 
 module ALStatementImpl =
-    let createAssignment ((assignedTo:ALExpression),(expression:ALExpression)) =
+    
+    
+    
+    let createExit (fsalStatement:ALExpression) =
+        let alexp = fsalStatement |> buildExpression :?> CodeExpressionSyntax
+        let exitstatement =
+            sf.ExitStatement(alexp)
+                .WithOpenParenthesisToken(sf.Token(sk.OpenParenToken))
+                .WithCloseParenthesisToken(sf.Token(sk.CloseParenToken))
+                .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+        exitstatement
+    let createAssignment (level:int) ((assignedTo:ALExpression),(expression:ALExpression)) =
+        let leveltrivia = [| for i = 0 to level do t._4spaces |] |> Array.concat
+        let keywordLeading = Array.append t.lf4spaces leveltrivia
         // todo: unwrap assignment trees
         match expression with
         | FSALExpr (StatementExpr (Assignment(origtgt, value))) ->
@@ -134,8 +149,11 @@ module ALStatementImpl =
                 sf.AssignmentStatement(target,assignedvalue)
                     .WithAssignmentToken(sf.Token(sk.AssignToken).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+                    .WithLeadingTrivia(keywordLeading)
             assignStatement
-        | _ ->  
+        | FSALExpr (StatementExpr (state)) ->
+            let preceding,last = ALStatement.collectSequencesLast state
+            let dfdfg = 5
             let target = assignedTo |> buildExpression :?> CodeExpressionSyntax
             let assignedvalue =
                 match expression with
@@ -144,163 +162,212 @@ module ALStatementImpl =
                 sf.AssignmentStatement(target,assignedvalue)
                     .WithAssignmentToken(sf.Token(sk.AssignToken).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+                    .WithLeadingTrivia(keywordLeading)
             assignStatement
-       
-    let createIfElse (guard: ALExpression) (``thenExp`` : ALStatement) (``elseExpOpt`` : ALStatement option) =
-        let alguard = (ALUnaryOperator.Grouping,guard) |> buildUnaryExpression
+        | _ ->
+            
+            let target = assignedTo |> buildExpression :?> CodeExpressionSyntax
+            let assignedvalue =
+                match expression with
+                | _ -> expression |> buildExpression :?> CodeExpressionSyntax
+            let assignStatement =
+                sf.AssignmentStatement(target,assignedvalue)
+                    .WithAssignmentToken(sf.Token(sk.AssignToken).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
+                    .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+                    .WithLeadingTrivia(keywordLeading)
+            assignStatement
+    let createGuardExpr (level:int) (fsalExpr:ALExpression) : (CodeExpressionSyntax * StatementSyntax list) =
+        match fsalExpr with
+        | FSALExpr (StatementExpr (Sequence(alStatement, statement))) ->
+            let preceding,last =  ALStatement.collectSequencesLast (Sequence(alStatement, statement))
+            (ALUnaryOperator.Grouping, ALExpression.ofALStatement last) |> buildUnaryExpression, (preceding |> buildStatements (level) [])
+        | n ->
+            (ALUnaryOperator.Grouping,n) |> buildUnaryExpression, []
+            
+    let createBlock level (statements:StatementSyntax list) =
+        let leveltrivia = [| for i = 0 to level do t._4spaces |] |> Array.concat
+        let blocklevel = Array.append t.lf4spaces leveltrivia
+        let sl = sf.List(statements)
+        let statement =
+            sf.Block(sl)
+                .WithBeginKeywordToken(sf.Token(sk.BeginKeyword).WithLeadingTrivia(blocklevel))
+                .WithEndKeywordToken(sf.Token(sk.EndKeyword).WithLeadingTrivia(blocklevel))
+                .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+        statement
+        
+    let createIfElse (level:int) (guard: ALExpression) (``thenExpRaw`` : ALStatement) (``elseExpOpt`` : ALStatement option) : StatementSyntax=
+        let leveltrivia = [| for i = 0 to level do t._4spaces |] |> Array.concat
+        let alguard,precedingStatements = createGuardExpr level guard
+//        let alguard,statementsBeforeGuard = (ALUnaryOperator.Grouping,guard) |> buildUnaryExpression, []
+        let fsafdsf = 5
+        let thenExp =
+            match thenExpRaw with
+            | Expression (FSALExpr (StatementExpr statement)) -> statement 
+            | _ -> thenExpRaw //Expression (FSALExpr (StatementExpr 
+        let fgdsgfd = 5
         let althen : StatementSyntax =
             match thenExp,elseExpOpt with
-            | Expression (FSALExpr (StatementExpr alStatement)),_ ->
-                let st : StatementSyntax list = [alStatement] |> buildStatements []
-                match st.[0] with
-                | :? AssignmentStatementSyntax as s ->
-                    s.WithSemicolonToken(SyntaxToken())
-                | _ -> st[0]
+            // assign decision tree variables before then expr
+            | Assignment(tgt, FSALExpr (StatementExpr(Sequence(seq1, seq2)))),_ ->
+                let lastThen, precedingThen =
+                    let all = ALStatement.collectSequences [] (Sequence(seq1, seq2))
+                    all.Head, all.Tail |> List.rev
+                let fdgfdg =5
+                let preceding : StatementSyntax list = precedingThen |> buildStatements (level) []
+                let last = [Assignment(tgt,lastThen |> ALExpression.ofALStatement)] |> buildStatements (level) []
+                let blockStatement = createBlock level (preceding @ last ) 
+//                let precedingThen,lastThen = thenStatements[..thenStatements.Length - 2],thenStatements[thenStatements.Length - 1]
+//                let st : StatementSyntax list = [lastThen] |> buildStatements (level+1) []
+                match elseExpOpt with
+                | Some _ -> blockStatement.WithSemicolonToken(sf.Token(sk.None))
+                | None ->
+                    let nb = 5
+                    blockStatement
+
+            | Block alStatements,_ ->
+                let statements = alStatements |> buildStatements (level+2) []
+                let block = ALStatementImpl.createBlock (level+1) statements
+//                let stat = ALStatementImpl.createBlock (level+1) alStatements
+//                let st  =
+//                    [Block alStatements] |> buildStatements (level+1) []
+//                    |> List.head
+//                    :?> BlockSyntax 
+                match elseExpOpt with
+                | Some _ -> block.WithSemicolonToken(sf.Token(sk.None))
+                | None -> block
             | Expression e, _ ->
                 let expr = e |> buildExpression :?> CodeExpressionSyntax
                 match elseExpOpt with
                 | Some _ ->  sf.ExpressionStatement(expr)
                 | None -> sf.ExpressionStatement(expr).WithSemicolonToken(sf.Token(sk.SemicolonToken))
                 |> (fun f -> f.WithTrailingTrivia(sf.Space))
+                |> (fun f -> f.WithLeadingTrivia(Array.append [|sf.Linefeed;sf.Linefeed|] t.lf12spaces))
             | Assignment(assignedTo, expression),Some _ ->
-                ALStatementImpl.createAssignment(assignedTo,expression)
-                    .WithSemicolonToken(SyntaxToken())
+                (ALStatementImpl.createAssignment (level + 1) (assignedTo,expression)).WithSemicolonToken(sf.Token(sk.None))
             | Assignment(assignedTo, expression),None ->
-                ALStatementImpl.createAssignment(assignedTo,expression)
+                ALStatementImpl.createAssignment (level + 1) (assignedTo,expression)
+            | Exit (ifx),elsex ->
+                let exit1 = ALStatementImpl.createExit ifx
+                match elsex with
+                | Some _ -> exit1.WithSemicolonToken(sf.Token(sk.None))
+                | None -> exit1
             | _ -> failwithf $"unhandled case"
             
         let alelseopt : (StatementSyntax option) = elseExpOpt |> Option.map (fun f ->
             match f with
             | Expression (FSALExpr (StatementExpr alStatement)) ->
-                let st = [alStatement] |> buildStatements []
+                let st = [alStatement] |> buildStatements (level + 1) []
                 st[0]
             | Expression e ->
                 let exp = e |> buildExpression :?> CodeExpressionSyntax
                 let st = exp |> sf.ExpressionStatement
                 st.WithSemicolonToken(sf.Token(sk.SemicolonToken))
+            | Assignment(assignedTo, FSALExpr(StatementExpr (IfStatement(guard, th, els)))) ->
+                
+                match th with
+                | Expression alExpression -> 
+                    let statement = ALStatement.ofExpression alExpression
+                    match statement with
+                    | Assignment (tgt,value) ->  
+                        let r = createIfElse (level + 1) guard (Assignment(assignedTo,value)) els
+                        r
+                    | _ -> failwith ""
+                | _ -> failwith ""
+            
             | Assignment(assignedTo, expression) ->
-                ALStatementImpl.createAssignment(assignedTo,expression)
-                    
+                ALStatementImpl.createAssignment (level + 1) (assignedTo,expression)
+            | Exit (elsex) ->
+                let exit2 = ALStatementImpl.createExit elsex
+                exit2
             | _ -> failwithf $"unhandled case"
         )
         let statement =
+//            let statementLeading = t.lf12spaces |> Array.append leveltrivia
+            let keywordLeading = Array.append t.lf4spaces leveltrivia
             match alelseopt with
             | None ->
                 sf.IfStatement(alguard,althen)
                     .WithIfKeywordToken(sf.Token(sk.IfKeyword).WithTrailingTrivia(sf.Space))
                     .WithThenKeywordToken(sf.Token(sk.ThenKeyword).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
-                    //                .WithSemicolonToken(sf.Token(sk.SemicolonToken))
+                    .WithLeadingTrivia(keywordLeading)
             | Some elseStatement ->
-                sf.IfStatement(
-                    alguard,
-                    althen.WithTrailingTrivia(sf.Space),
-                    elseStatement)
+                sf.IfStatement(alguard,althen,elseStatement)
                     .WithIfKeywordToken(sf.Token(sk.IfKeyword).WithTrailingTrivia(sf.Space))
-                    .WithElseKeywordToken(sf.Token(sk.ElseKeyword).WithTrailingTrivia(sf.Space))
                     .WithThenKeywordToken(sf.Token(sk.ThenKeyword).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
-        statement
+                    .WithElseKeywordToken(sf.Token(sk.ElseKeyword).WithTrailingTrivia(sf.Space).WithLeadingTrivia(keywordLeading))
+                    .WithLeadingTrivia(keywordLeading)
+        match precedingStatements with
+        | [] -> statement
+        | _ ->
+            ALStatementImpl.createBlock (level)
+                (precedingStatements @ [statement])
 
-let rec buildStatements acc (statements:ALStatement list) =
+let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALStatement list) : StatementSyntax list =
+    let leveltrivia = [| for i = 0 to level do t._4spaces |] |> Array.concat
     match statements with
     | [] ->
         acc
-        |> List.map (fun f -> f.WithLeadingTrivia(Trivia.lf8spaces))
-        |> List.rev
+        |> List.map (fun f -> f.WithLeadingTrivia(Array.append t.lf4spaces leveltrivia))
+        
     | head::tail ->
         match head with
+        | Sequence(statement1, statement2) ->
+            let s1 = buildStatements level [] [statement1] 
+            let s2 = buildStatements level [] [statement2] 
+            let nc = (s2 @ s1 @ acc)
+            let t = 5
+            // add in reverse
+            buildStatements level (nc) tail
         | Expression fsalExp ->
             match fsalExp with
-            | FSALExpr Ignore ->  buildStatements acc tail
+            | FSALExpr Ignore ->  buildStatements level acc tail
             | FSALExpr (StatementExpr alStatement) ->
 //                let al_exp = ALExpression.ofALStatement alStatement
 //                let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
-                let buildstat = buildStatements [] [alStatement] |> List.head
+                let buildstat = buildStatements level [] [alStatement] |> List.head
 //                let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
-                buildStatements (buildstat::acc) tail
+                buildStatements level (buildstat::acc) tail
             | NaryExpression alNaryExpression ->
                 let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
                 let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
-                buildStatements (statement::acc) tail
+                buildStatements level (statement::acc) tail
             | Binary (left,op,right) ->
                 let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
                 let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
-                buildStatements (statement::acc) tail
+                buildStatements level (statement::acc) tail
+            | Identifier s -> buildStatements level (sf.ExpressionStatement(sf.IdentifierName "BUG")::acc) tail
+            | Constant null ->
+                // TODO: null condition
+//                buildStatements (sf.ExpressionStatement(sf.IdentifierName "BUG")::acc) tail
+                buildStatements level  (acc) tail
+            | Constant g -> buildStatements level (sf.ExpressionStatement(sf.IdentifierName "BUG")::acc) tail
             | _ -> failwith "test"
                 
             
         | Assignment(alExpression, FSALExpr (StatementExpr alStatement)) ->
             //todo: unwrap assignment
+            let t = 5
             match alStatement with
             | IfStatement(guard, thenExp, elseExpOpt) ->
                 let statement = 
                     ALStatementImpl.createIfElse
+                       0
                        guard
                        (Assignment(alExpression,ALExpression.ofALStatement thenExp))
                        (elseExpOpt |> Option.map (fun f -> Assignment(alExpression, f |> ALExpression.ofALStatement)))
-                buildStatements (statement::acc) tail
-                
+                buildStatements level (statement::acc) tail
+            | Expression (Constant o) ->
+                let statement = ALStatementImpl.createAssignment level (alExpression,Constant o)
+                buildStatements level (statement::acc) tail
             | _ -> failwith "unhandled case"
             
         | Assignment(alExpression, expression) ->
-            let statement = ALStatementImpl.createAssignment(alExpression,expression)
-            buildStatements (statement::acc) tail
+            let t = 5
+            let statement = ALStatementImpl.createAssignment level (alExpression,expression)
+            buildStatements level (statement::acc) tail
         | IfStatement(guard, thenExp, elseExpOpt) ->
-            let alguard =
-                (ALUnaryOperator.Grouping,guard)
-                |> buildUnaryExpression
-            let althen : StatementSyntax =
-                match thenExp,elseExpOpt with
-                | Expression (FSALExpr (StatementExpr alStatement)),_ ->
-                    let st = [alStatement] |> buildStatements []
-                    match st[0] with
-                    | :? AssignmentStatementSyntax as s ->
-                        s.WithSemicolonToken(SyntaxToken())
-                    | _ -> st[0]
-                | Expression e, _ ->
-                    let expr = e |> buildExpression :?> CodeExpressionSyntax
-                    match elseExpOpt with
-                    | Some _ ->  sf.ExpressionStatement(expr)
-                    | None -> sf.ExpressionStatement(expr).WithSemicolonToken(sf.Token(sk.SemicolonToken))
-                    |> (fun f -> f.WithTrailingTrivia(sf.Space))
-                | Assignment(assignedTo, expression),Some _ ->
-                    ALStatementImpl.createAssignment(assignedTo,expression)
-                        .WithSemicolonToken(SyntaxToken())
-                | Assignment(assignedTo, expression),None ->
-                    ALStatementImpl.createAssignment(assignedTo,expression)
-                | _ -> failwithf $"unhandled case"
-                
-            let alelseopt : (StatementSyntax option) = elseExpOpt |> Option.map (fun f ->
-                match f with
-                | Expression (FSALExpr (StatementExpr alStatement)) ->
-                    let st = [alStatement] |> buildStatements []
-                    st[0]
-                | Expression e ->
-                    let exp = e |> buildExpression :?> CodeExpressionSyntax
-                    let st = exp |> sf.ExpressionStatement
-                    st.WithSemicolonToken(sf.Token(sk.SemicolonToken))
-                | Assignment(assignedTo, expression) ->
-                    ALStatementImpl.createAssignment(assignedTo,expression)
-                        
-                | _ -> failwithf $"unhandled case"
-            )
-            let statement =
-                match alelseopt with
-                | None ->
-                    sf.IfStatement(alguard,althen)
-                        .WithIfKeywordToken(sf.Token(sk.IfKeyword).WithTrailingTrivia(sf.Space))
-                        .WithThenKeywordToken(sf.Token(sk.ThenKeyword).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
-                        //                .WithSemicolonToken(sf.Token(sk.SemicolonToken))
-                | Some elseStatement ->
-                    sf.IfStatement(
-                        alguard,
-                        althen.WithTrailingTrivia(sf.Space),
-                        elseStatement)
-                        .WithIfKeywordToken(sf.Token(sk.IfKeyword).WithTrailingTrivia(sf.Space))
-                        .WithElseKeywordToken(sf.Token(sk.ElseKeyword).WithTrailingTrivia(sf.Space))
-                        .WithThenKeywordToken(sf.Token(sk.ThenKeyword).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
-                        
-            buildStatements (statement::acc) tail
-
+            let statement = ALStatementImpl.createIfElse level guard thenExp elseExpOpt            
+            buildStatements level (statement::acc) tail
         | Exit alExpression ->
             let alexp = alExpression |> buildExpression :?> CodeExpressionSyntax
             let exitstatement =
@@ -308,7 +375,7 @@ let rec buildStatements acc (statements:ALStatement list) =
                     .WithOpenParenthesisToken(sf.Token(sk.OpenParenToken))
                     .WithCloseParenthesisToken(sf.Token(sk.CloseParenToken))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
-            buildStatements (exitstatement::acc) tail
+            buildStatements level (exitstatement::acc) tail
         | ForLoop(initval, endval, doStatement, isUp) ->
             let loopvar = sf.IdentifierName("i")
             let doStatementExpanded =
@@ -316,7 +383,7 @@ let rec buildStatements acc (statements:ALStatement list) =
                 | FSALExpr (StatementExpr alStatement) ->
                     match alStatement with
                     | Assignment(alExpression, expression) -> 
-                        ALStatementImpl.createAssignment (alExpression,expression)
+                        ALStatementImpl.createAssignment level (alExpression,expression)
                     | _ -> failwith "invalid statement"
                 | _ -> failwith "invalid statement"
             
@@ -338,21 +405,21 @@ let rec buildStatements acc (statements:ALStatement list) =
                     sf.Token(if isUp then sk.ToKeyword else sk.DownToKeyword),
                     l4_end |> (t.wls >> t.wts),
                     doStatementExpanded |> (t.wls >> t.wts))
-            buildStatements (statement::acc) tail
+            buildStatements level (statement::acc) tail
         | WhileLoop(fsal_guard, fsal_do) ->
             let al_guard = fsal_guard |> buildExpression :?> CodeExpressionSyntax
             let al_do =
                 fsal_do |> ALStatement.ofExpression
-                |> (fun f -> buildStatements [] [f] )
+                |> (fun f -> buildStatements level [] [f] )
                 |> List.head
             let statement =
                 sf.WhileStatement(al_guard, al_do)
                     .WithDoKeywordToken(sf.Token(sk.DoKeyword) |> (t.wlst >> t.wtst) )
                     .WithWhileKeywordToken(sf.Token(sk.WhileKeyword) |> t.wtst)
-            buildStatements (statement::acc) tail
+            buildStatements level (statement::acc) tail
         | Block exprs ->
             let statements =
-                buildStatements [] exprs
+                buildStatements level [] exprs
                 |> List.map (fun f ->
                     let currtrivia = f.GetLeadingTrivia()
                     f.WithLeadingTrivia(currtrivia.AddRange(t._4spaces))
@@ -364,12 +431,7 @@ let rec buildStatements acc (statements:ALStatement list) =
                     .WithBeginKeywordToken(sf.Token(sk.BeginKeyword))
                     .WithEndKeywordToken(sf.Token(sk.EndKeyword).WithLeadingTrivia(Trivia.lf8spaces))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
-            buildStatements (statement::acc) tail
-        | Sequence(alStatement, alStatement2) ->
-            let statements =
-                buildStatements [] [alStatement;alStatement2]
-            buildStatements (statements @ acc) tail
-                
+            buildStatements level (statement::acc) tail
         | x -> failwithf $"%A{x}"
     
 
@@ -383,12 +445,15 @@ module Members =
                 |> Seq.map (fun f -> VariableDeclaration.create f.name (TypeReference.create f.altype) )
                 |> sf.List
                 |> VarSection.create
+             
             let statements =
-                b.statements |> Seq.toList
-                |> List.where (fun f -> f <> ALStatement.Expression ( FSALExpr Ignore))
-                |> buildStatements [] 
+                b.statements
+                |> List.singleton
+                |> buildStatements 0 []
+                |> List.rev
+                
             let parameters = b.parameters |> ParameterList.create
-            let procbody = Block.create (sf.List(statements))
+            let procbody = ALStatementImpl.createBlock -1 statements |> (fun f -> f.WithTrailingTrivia(sf.Linefeed))
             Procedure.create b.identifier parameters variables procbody b.returnType
        
     let createField (builder:ALFieldBuilder) : FieldSyntax =

@@ -3,26 +3,20 @@ module Fs.AL.Compiler.IntermediateLanguage.ALTypeMapping
 
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerSymbols
-open Fs.AL.Compiler.CompilerSymbols.FSharpType
+
 open Fs.AL.Core.ALComplexValues
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
 open Fs.AL.Compiler.Reflection
 
 module ALType =
+    type private t = Fs.AL.Core.ALCoreValues.ALType
     
-    type private t = ALType
-    
-    
-    let a : string = ""
     let rec ofFSharpType (ftype:FSharpType) =
-        let fullname =
-            ftype |> FSharpType.getFullName
-        let t5 = 5
+        let fullname = ftype |> FSharpType.getFullName
         match fullname with
         | FullNameFSharp.ref -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.byref" -> ftype.GenericArguments[0] |> ofFSharpType
-        | FullNameFSharp.unit -> Simple( ALSimpleType.Text (Some 123))
         // array types
         | "Microsoft.FSharp.Core.[]" ->
             let arrayof = ftype.GenericArguments[0] |> ofFSharpType
@@ -71,12 +65,12 @@ module ALType =
                     failwithf $"%A{debug}"
                     Simple (SimpleType "FUNCTION") //TODO:
             else failwith $"unhandled typeprovider {x}"
-        | x when ftype.BaseType.Value.TypeDefinition.FullName = ALTypeFullNames.record ->
+        | x when ftype.BaseType.Value.TypeDefinition.FullName = FSharpType.ALTypeFullNames.record ->
             let roottype = ftype.TypeDefinition |> FSharpEntity.getRootType
             let name = ftype.TypeDefinition.DisplayName
             Complex (Record (roottype |> FSharpEntity.getALCompiledName))
         // just for debugging
-        | x -> failwith "unknown type"
+        | x -> failwith $"unsupported type {x}"
         
             
     let isRef (fst:FSharpType) = fst.TypeDefinition |> FSharpType.isRefType

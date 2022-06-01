@@ -1,6 +1,8 @@
 ﻿module rec Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 
 open System.Collections.Generic
+open System.Collections.ObjectModel
+open System.Linq
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage
@@ -50,6 +52,13 @@ type ALExpression =
     | NaryExpression of expr:ALNaryExpression
     | FSharpLambda of newVariable:ALVariable * ALExpression
     with
+        static member fromALStatement (statement:ALStatement) =
+            match statement with
+            | Sequence _ -> statement |> StatementExpr |> FSALExpr
+            | Assignment _ -> statement |> StatementExpr |> FSALExpr
+            | Block _ -> statement |> StatementExpr |> FSALExpr
+            | _ -> failwith "not a valid AL statement"
+            
         /// use only in non-equivalent f# to al mapping cases 
         static member ofALStatement (statement:ALStatement) =
             match statement with
@@ -127,6 +136,18 @@ type ALStatement =
     | WhileLoop of guard:ALExpression * doStatement:ALExpression   
     | Exit of value:ALExpression
     with
+    static member collectSequences acc (stat:ALStatement) =
+        match stat with
+        | Sequence(alStatement, statement) ->
+            ALStatement.collectSequences (alStatement :: acc) statement
+        | stat ->
+            stat :: acc
+         
+    static member collectSequencesLast (stat:ALStatement) =
+        let allstatements = ALStatement.collectSequences [] stat 
+        let preceding,last = allstatements.Tail |> List.rev,allstatements.Head
+        preceding,last
+            
     static member ofExpression (exp:ALExpression) =
         match exp with
         | FSALExpr (StatementExpr alStatement)  -> alStatement
@@ -163,7 +184,76 @@ type ALStatement =
             Exit (replaceExp alExpression)
             
         
-    
+    static member getExitSequence curr2 (fsalExp:ALStatement) =
+        match fsalExp with
+        | Sequence(curr, next) ->
+             ALStatement.getExitSequence curr (next) 
+        | x ->
+            match x with
+            | Expression (Constant o) -> // change last statement to exit condition
+                Sequence(curr2,(Exit(Constant o)))
+            | Expression (NaryExpression (Invocation(alExpression, alExpressions))) ->
+                Sequence(curr2,(Exit(NaryExpression (Invocation(alExpression, alExpressions)))))
+            | Expression (Binary(alExpression, alBinaryOperator, expression)) ->
+                Sequence(curr2,Exit(Binary(alExpression, alBinaryOperator, expression)))
+            | Expression (Identifier s) ->
+                Sequence(curr2,(Exit(Identifier s)))
+            | _ -> failwith "unimplemented exit condition"
+            
+//    static member unwrapSequence (coll:ObservableCollection<ALStatement>) (fsalExp:ALStatement list) =
+//        match fsalExp with
+//        | [] -> coll
+//        | Sequence(curr, next) :: tail ->
+//             coll.Add(curr)
+//             let coll1 = ALStatement.unwrapSequence coll [next]
+//             let coll2 = ALStatement.unwrapSequence coll1 tail
+//             coll2
+//        | head :: tail ->
+//            coll.Add(head)
+//            let coll1 = ALStatement.unwrapSequence coll tail
+//            coll1
+//            
+    static member withExit last : ALStatement =
+        let debug = 5
+        let upd =
+            match last with
+            | Sequence(alStatement, statement) ->
+                Sequence(alStatement,ALStatement.withExit statement)
+            | Expression (Constant o) -> // change last statement to exit condition
+                Exit(Constant o)
+            | Expression (NaryExpression (Invocation(alExpression, alExpressions))) ->
+                Exit(NaryExpression (Invocation(alExpression, alExpressions)))
+            | Expression (Binary(alExpression, alBinaryOperator, expression)) ->
+                Exit(Binary(alExpression, alBinaryOperator, expression))
+            | Expression (Identifier s) ->
+                Exit(Identifier s)
+            | IfStatement(guard, thenx, elsex) ->
+                IfStatement(
+                    guard,
+                    thenx |> ALExpression.ofALStatement |> Exit,
+                    elsex |> Option.map (ALExpression.ofALStatement >> Exit)
+                )
+            | Exit alExpression ->
+                failwith "statement already has exit"
+            | _ -> failwith "unimplemented exit condition"
+        upd
+        
+//    static member printAST (fsalExp:ALStatement) =
+//        match fsalExp with
+//        | Sequence(curr, next) ->
+//             ALStatement.getExitSequence curr (next) 
+//        | Assignment (tgt, value) ->
+//            printfn $"%A{}"
+//        | Expression (Constant o) -> // change last statement to exit condition
+//            Sequence(curr2,(Exit(Constant o)))
+//        | Expression (NaryExpression (Invocation(alExpression, alExpressions))) ->
+//            Sequence(curr2,(Exit(NaryExpression (Invocation(alExpression, alExpressions)))))
+//        | Expression (Binary(alExpression, alBinaryOperator, expression)) ->
+//            Sequence(curr2,Exit(Binary(alExpression, alBinaryOperator, expression)))
+//        | Expression (Identifier s) ->
+//            Sequence(curr2,(Exit(Identifier s)))
+//        | _ -> failwith "unimplemented exit condition"
+        
 type ALComplexType =
     | TODO
     

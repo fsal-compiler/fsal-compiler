@@ -225,6 +225,7 @@ type FSharpProjectOptions with
         { ProjectFileName = proj.Name
           ProjectId = None
           SourceFiles = proj.ProjectFiles.Value
+          
           OtherOptions =
             [|
                yield "--define:NET6_0"

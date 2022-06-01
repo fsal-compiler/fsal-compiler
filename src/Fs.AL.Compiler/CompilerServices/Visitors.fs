@@ -4,18 +4,17 @@ open FSharp.Compiler.Symbols
 open Fs.AL.Compiler
 open Fs.AL.Compiler.CompilerServices
 
-[<RequireQualifiedAccess>]
-type ExpressionContext =
-    | None
-    | Sequential of chain:FSharpExpr list
 
 /// does not go further into recursive member calls
-let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
+let rec visitFunctionBody (g:unit -> unit) (f) (e:FSharpExpr)  =
     f e
     let visitFunctionBody = visitFunctionBody g
     let visitOuterExprs = visitOuterExprs g
     let visitObjArg = visitObjArg g
     let visitObjMember = visitObjMember g
+    Logger.logDebug $"visit: %s{FSExpr.getPatternName e}"
+    let visit = FSExpr.getPatternName e
+    let dbg = 5
     match e with 
     | FSharpExprPatterns.AddressOf(lvalueExpr) -> 
         visitFunctionBody f lvalueExpr
@@ -29,7 +28,8 @@ let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
     | FSharpExprPatterns.Coerce(targetType, inpExpr) -> 
         visitFunctionBody f inpExpr
     | FSharpExprPatterns.FastIntegerForLoop(startExpr, limitExpr, consumeExpr, isUp, debug1, debug2) -> 
-        visitFunctionBody f startExpr; visitFunctionBody f limitExpr; visitFunctionBody f consumeExpr
+//        visitFunctionBody f startExpr; visitFunctionBody f limitExpr; visitFunctionBody f consumeExpr
+        ()
     | FSharpExprPatterns.ILAsm(asmCode, typeArgs, argExprs) -> 
         visitOuterExprs f argExprs
     | FSharpExprPatterns.ILFieldGet (objExprOpt, fieldType, fieldName) -> 
@@ -42,18 +42,14 @@ let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
 //        visitALExpr f guardExpr; visitALExpr f thenExpr; visitALExpr f elseExpr
     
     | FSharpExprPatterns.Lambda(lambdaVar, bodyExpr) -> 
-        visitFunctionBody f bodyExpr
-    | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) -> 
-//        visitALExpr f bindingExpr
-        //TODO: seq
-//        match bodyExpr with
-//        | FSharpExprPatterns.Sequential(curr,next) ->
-////            let grouped = FSExpr.groupSequentials curr next
-////            grouped
-//            let asdf = 1
-//            ()
-//        | _ ->
-            visitFunctionBody f bodyExpr
+//        visitFunctionBody f bodyExpr
+        ()
+    | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) ->
+        // TODO: tahtis
+//        let t = 5
+//        g (ExpressionContext.BindingVar bindingVar)
+//        visitFunctionBody f bodyExpr
+        ()
     | FSharpExprPatterns.LetRec(recursiveBindings, bodyExpr) ->
         List.iter (fun (z,x,c) -> visitFunctionBody f x) recursiveBindings; visitFunctionBody f bodyExpr
     | FSharpExprPatterns.NewArray(arrayType, argExprs) -> 
@@ -79,8 +75,10 @@ let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
     | FSharpExprPatterns.FSharpFieldSet(objExprOpt, recordOrClassType, fieldInfo, argExpr) -> 
         visitObjArg f objExprOpt; visitFunctionBody f argExpr
     | FSharpExprPatterns.Sequential(firstExpr, secondExpr) ->
-        visitFunctionBody f firstExpr
-        visitFunctionBody f secondExpr
+//        visitFunctionBody f firstExpr
+        let t = 5
+//        visitFunctionBody f secondExpr
+        ()
     | FSharpExprPatterns.TryFinally(bodyExpr, finalizeExpr, debug1, debug2) -> 
 //        visitFunctionBody f bodyExpr; visitFunctionBody f finalizeExpr
         ()
@@ -89,9 +87,11 @@ let rec visitFunctionBody (g:ExpressionContext -> unit) (f) (e:FSharpExpr)  =
     | FSharpExprPatterns.TupleGet(tupleType, tupleElemIndex, tupleExpr) -> 
         visitFunctionBody f tupleExpr
     | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) -> 
-        visitFunctionBody f decisionExpr; List.iter (snd >> visitFunctionBody f) decisionTargets
+//        visitFunctionBody f decisionExpr; List.iter (snd >> visitFunctionBody f) decisionTargets
+        ()
     | FSharpExprPatterns.DecisionTreeSuccess (decisionTargetIdx, decisionTargetExprs) -> 
-        visitOuterExprs f decisionTargetExprs
+//        visitOuterExprs f decisionTargetExprs
+        ()
     | FSharpExprPatterns.TypeLambda(genericParam, bodyExpr) -> 
         visitFunctionBody f bodyExpr
     | FSharpExprPatterns.TypeTest(ty, inpExpr) -> 
@@ -133,7 +133,7 @@ and visitObjMember g f memb =
     
 
 /// basic visitor
-let rec visitExpr (g:ExpressionContext -> unit) f (e:FSharpExpr) = 
+let rec visitExpr (g:unit -> unit) f (e:FSharpExpr) = 
     f e
     let visitExpr = visitExpr g
     let visitObjArg = visitObjArg g
@@ -164,9 +164,11 @@ let rec visitExpr (g:ExpressionContext -> unit) f (e:FSharpExpr) =
         visitExpr f bodyExpr
     | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) -> 
 //        visitExpr f bindingExpr
+        let t = 5
         visitExpr f bodyExpr
     | FSharpExprPatterns.LetRec(recursiveBindings, bodyExpr) ->
 //            (snd >> visitExpr f)
+        let t = 5
         List.iter (fun (z,x,c) -> visitExpr f x) recursiveBindings; visitExpr f bodyExpr
     | FSharpExprPatterns.NewArray(arrayType, argExprs) -> 
         visitExprs f argExprs
@@ -222,7 +224,8 @@ let rec visitExpr (g:ExpressionContext -> unit) f (e:FSharpExpr) =
         visitExprs f argExprs
     | FSharpExprPatterns.ValueSet(valToSet, valueExpr) -> 
         visitExpr f valueExpr
-    | FSharpExprPatterns.WhileLoop(guardExpr, bodyExpr, debug1) -> 
+    | FSharpExprPatterns.WhileLoop(guardExpr, bodyExpr, debug1) ->
+        let v = 5
         visitExpr f guardExpr; visitExpr f bodyExpr
     | FSharpExprPatterns.BaseValue baseType -> ()
     | FSharpExprPatterns.DefaultValue defaultType -> ()

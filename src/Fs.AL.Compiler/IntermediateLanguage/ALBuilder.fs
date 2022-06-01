@@ -1,5 +1,6 @@
 ﻿module rec Fs.AL.Compiler.ALBuilder
 
+open System.Collections.ObjectModel
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerDeclarations
 open Fs.AL.Compiler.IntermediateLanguage.ALContext
@@ -48,8 +49,6 @@ type ALObjectBuilder with
             | false -> paramsFlattened
             |> Seq.map toALVariable
             |> Seq.toList
-        
-        
             
         let procedureBuilder =
             { ALProcedureContext.Default with
@@ -60,48 +59,18 @@ type ALObjectBuilder with
                 returnType = returnvalue
             }
       
-        // for debugging      
-        let onstatementAdd =
-            procedureBuilder.statements.CollectionChanged
-            |> Observable.filter (fun f -> f <> null )
-            |> Observable.add (fun f ->
-                let procb = procedureBuilder
-                let added = 5
-                ()
-            )
-        
-        let setprocContext =
-            (fun f -> procedureBuilder.expressionContext <- f)
-                           
         let newcontext = ExpressionReader.readProcedureBody procedureBuilder body
+        let body1 = newcontext.statements
+//        printfn "%A" "--------------"
+//        printfn "%A" "FINAL AST:"
+//        printfn "%A" body1
         
-        
-        
-        // only needed for DateTime.Now for now
-        match returnvalue with
-        | None -> () 
-        | Some alType -> 
-            let laststatement = newcontext.statements |> Seq.last
-            match laststatement with
-            | Expression (Constant o) -> // change last statement to exit condition
-                newcontext.statements.Remove(laststatement) |> ignore
-                newcontext.statements.Add(Exit(Constant o))
-            | Expression (NaryExpression (Invocation(alExpression, alExpressions))) ->
-                newcontext.statements.Remove(laststatement) |> ignore
-                newcontext.statements.Add(Exit(NaryExpression (Invocation(alExpression, alExpressions))))
-            | Expression (Binary(alExpression, alBinaryOperator, expression)) ->
-                newcontext.statements.Remove(laststatement) |> ignore
-                newcontext.statements.Add(Exit(Binary(alExpression, alBinaryOperator, expression)))
-            | Expression (Identifier s) ->
-                newcontext.statements.Remove(laststatement) |> ignore
-                newcontext.statements.Add(Exit((Identifier s)))
-            //todo: if statement
-            | Exit (stat) -> ()
-            | _ -> failwithf $"unimplemented case: %A{laststatement}"
-        { b with alMembers = Procedure newcontext::b.alMembers }
-        
-        
-        
+        match newcontext.returnType with
+        | None -> { b with alMembers = Procedure newcontext::b.alMembers }
+        | Some rettype ->
+            let f = newcontext.statements |> ALStatement.withExit 
+            newcontext.statements <- f
+            { b with alMembers = Procedure newcontext::b.alMembers }
         
 type ALFieldBuilder =
     | RecordField of ALRecordFieldContext

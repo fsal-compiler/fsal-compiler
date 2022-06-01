@@ -21,45 +21,45 @@ type APIResponseProvider = Fable.JsonProvider.Generator<JsonSample>
 
 type Customer = BaseApplicationALPackage.Tables.Customer
 
-type TranslationManagement() =
-    inherit ALCodeunit()
-    override this.ObjectId = 50100
+// type TranslationManagement() =
+//     inherit ALCodeunit()
+//     override this.ObjectId = 50100
 
-    member this.getTokenAsObject(jsonObject: ALJsonObject, tokenKey: string, error: string) =
-        let jtoken = ref (ALJsonToken())
+//     member this.getTokenAsObject(jsonObject: ALJsonObject, tokenKey: string, error: string) =
+//         let jtoken = ref (ALJsonToken())
 
-        if not (jsonObject.SelectToken(tokenKey, jtoken)) then
-            if error <> "" then failwith error
+//         if not (jsonObject.SelectToken(tokenKey, jtoken)) then
+//             if error <> "" then failwith error
 
-        jtoken.Value.AsObject()
+//         jtoken.Value.AsObject()
 
-    member this.getTokenAsArray(jsonObject: ALJsonObject, tokenKey: string, error: string) =
-        let jtoken = ref (ALJsonToken())
+//     member this.getTokenAsArray(jsonObject: ALJsonObject, tokenKey: string, error: string) =
+//         let jtoken = ref (ALJsonToken())
 
-        if not (jsonObject.SelectToken(tokenKey, jtoken)) then
-            if error <> "" then failwith error
+//         if not (jsonObject.SelectToken(tokenKey, jtoken)) then
+//             if error <> "" then failwith error
 
-        jtoken.Value.AsArray()
+//         jtoken.Value.AsArray()
 
-    member this.getArrayElementAsObject(jsonArray: ALJsonArray, index: int, error: string) =
-        let jtoken = ref (ALJsonToken())
+//     member this.getArrayElementAsObject(jsonArray: ALJsonArray, index: int, error: string) =
+//         let jtoken = ref (ALJsonToken())
 
-        if not (jsonArray.Get(index, jtoken)) then
-            if error <> "" then failwith error
+//         if not (jsonArray.Get(index, jtoken)) then
+//             if error <> "" then failwith error
 
-        jtoken.Value.AsObject()
+//         jtoken.Value.AsObject()
 
-    member this.handleErrors(jContent: ALJsonObject) =
-        let details =
-            this.getTokenAsObject (jContent, "details", "Invalid response from Web Service")
+//     member this.handleErrors(jContent: ALJsonObject) =
+//         let details =
+//             this.getTokenAsObject (jContent, "details", "Invalid response from Web Service")
 
-        let locations =
-            this.getTokenAsArray (details, "locations", "No locations available")
+//         let locations =
+//             this.getTokenAsArray (details, "locations", "No locations available")
 
-        let location =
-            this.getArrayElementAsObject (locations, 0, "Location not available")
+//         let location =
+//             this.getArrayElementAsObject (locations, 0, "Location not available")
 
-        ()
+//         ()
 
 
     // this is not implemented -
@@ -77,60 +77,60 @@ type TranslationManagement() =
 //        | _ ->
 //            () // the response is correct
 
-    member this.ReadJsonUsingTypeProvider(json: string, customer: byref<Customer>) =
-        let response = APIResponseProvider(json)
+    // member this.ReadJsonUsingTypeProvider(json: string, customer: byref<Customer>) =
+    //     let response = APIResponseProvider(json)
 
-        let details = response.details
-        let location = details.locations.[0]
-        let phone = details.phones.[0]
+    //     let details = response.details
+    //     let location = details.locations.[0]
+    //     let phone = details.phones.[0]
 
-        customer.Name <- response.name
-        customer.Address <- location.addressLine1
-        customer.``Post Code`` <- location.postalCode
-        customer.``Country/Region Code`` <- location.countryCode
-        customer.County <- location.country
-        customer.``Phone No.`` <- phone.value
+    //     customer.Name <- response.name
+    //     customer.Address <- location.addressLine1
+    //     customer.``Post Code`` <- location.postalCode
+    //     customer.``Country/Region Code`` <- location.countryCode
+    //     customer.County <- location.country
+    //     customer.``Phone No.`` <- phone.value
 
-    member this.LookupAddressInfo(name: string, customer: byref<Customer>) =
-        let httpContent = ALHttpContent()
-        httpContent.WriteFrom("{\"domain\":\"" + name + "\"}") // string interpolation not yet supported
-        let httpClient = ALHttpClient()
-        httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer <YOUR KEY>")
-        let httpResponse = ref (ALHttpResponseMessage())
-        httpClient.Post("https://api.fullcontact.com/v3/company.enrich", httpContent, httpResponse)
+    // member this.LookupAddressInfo(name: string, customer: byref<Customer>) =
+    //     let httpContent = ALHttpContent()
+    //     httpContent.WriteFrom("{\"domain\":\"" + name + "\"}") // string interpolation not yet supported
+    //     let httpClient = ALHttpClient()
+    //     httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer <YOUR KEY>")
+    //     let httpResponse = ref (ALHttpResponseMessage())
+    //     httpClient.Post("https://api.fullcontact.com/v3/company.enrich", httpContent, httpResponse)
 
-        if not httpResponse.Value.IsSuccessStatusCode then
-            failwith "Error connecting to the Web Service."
+    //     if not httpResponse.Value.IsSuccessStatusCode then
+    //         failwith "Error connecting to the Web Service."
 
-        let responseText = ref ""
-        httpResponse.Value.Content.ReadAs(responseText)
+    //     let responseText = ref ""
+    //     httpResponse.Value.Content.ReadAs(responseText)
 
-        // handling the errors the same way as in the book
-        let jContent = ALJsonObject()
-        jContent.ReadFrom(responseText.Value)
-        this.handleErrors (jContent)
+    //     // handling the errors the same way as in the book
+    //     let jContent = ALJsonObject()
+    //     jContent.ReadFrom(responseText.Value)
+    //     this.handleErrors (jContent)
 
-        // from here on using the Json Type Provider
-        this.ReadJsonUsingTypeProvider(responseText.Value, &customer)
-
-
+    //     // from here on using the Json Type Provider
+    //     this.ReadJsonUsingTypeProvider(responseText.Value, &customer)
 
 
-    // this is to test with replexample.fsx
-    member this.ProcedureForTesting(input: string) =
 
-        let httpContent = ALHttpContent()
-        httpContent.WriteFrom("{\"domain\":\"" + input + "\"}")
-        let httpClient = ALHttpClient()
-        httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer <YOUR KEY>")
-        //        let httpResponse = ref (ALHttpResponseMessage())
-        let httpResponse = ref (ALHttpResponseMessage())
-        httpClient.Post("https://api.fullcontact.com/v3/company.enrich", httpContent, httpResponse)
 
-        if not httpResponse.Value.IsSuccessStatusCode then
-            failwith "Error connecting to the Web Service."
+    // // this is to test with replexample.fsx
+    // member this.ProcedureForTesting(input: string) =
 
-        let responseText = ref ""
-        httpResponse.Value.Content.ReadAs(responseText)
+    //     let httpContent = ALHttpContent()
+    //     httpContent.WriteFrom("{\"domain\":\"" + input + "\"}")
+    //     let httpClient = ALHttpClient()
+    //     httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer <YOUR KEY>")
+    //     //        let httpResponse = ref (ALHttpResponseMessage())
+    //     let httpResponse = ref (ALHttpResponseMessage())
+    //     httpClient.Post("https://api.fullcontact.com/v3/company.enrich", httpContent, httpResponse)
 
-        "the response:" + responseText.Value
+    //     if not httpResponse.Value.IsSuccessStatusCode then
+    //         failwith "Error connecting to the Web Service."
+
+    //     let responseText = ref ""
+    //     httpResponse.Value.Content.ReadAs(responseText)
+
+    //     "the response:" + responseText.Value

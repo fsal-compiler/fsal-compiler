@@ -113,6 +113,11 @@ module FSharpEntity =
         | false -> x.FullName
         | true -> x.AbbreviatedType.TypeDefinition |> getRootTypeFullName
         
+        
+        
+        
+        
+        
     let getFullName (x:t) =
         let rootfullname = x |> getRootTypeFullName
         rootfullname

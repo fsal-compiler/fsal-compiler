@@ -11,7 +11,8 @@ type ILogger = abstract Log : string -> Printf.StringFormat<'a,unit> -> 'a
 let ConsoleLogger = { 
   new ILogger with
     member __.Log level format =
-      Printf.kprintf (printfn "[%s][%A] %s" (level) DateTime.Now) format
+//      Printf.kprintf (printfn "[%s][%A] %s" (level) DateTime.Now) format
+      Printf.kprintf (printfn "[%s] %s" (level)) format // without time
  }
 let logUsing (logger: ILogger) = logger.Log
 

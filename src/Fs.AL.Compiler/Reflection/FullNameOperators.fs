@@ -2,9 +2,9 @@
 module Fs.AL.Compiler.Reflection.FullNameOperators
 
 // module to store all the allowed operators
-let [<Literal>] ``|>`` = "Microsoft.FSharp.Core.Operators.(|>)"
-let [<Literal>] ``+`` = "Microsoft.FSharp.Core.Operators.(+)"
-let [<Literal>] ``-`` = "Microsoft.FSharp.Core.Operators.(-)"
+let [<Literal>] op_PipeRight = "Microsoft.FSharp.Core.Operators.(|>)"
+let [<Literal>] op_Add = "Microsoft.FSharp.Core.Operators.(+)"
+let [<Literal>] op_Subtract = "Microsoft.FSharp.Core.Operators.(-)"
 
 //
 
@@ -88,7 +88,7 @@ let [<Literal>] op_GreaterThan = "Microsoft.FSharp.Core.Operators.(>)"
 let [<Literal>] op_GreaterThanOrEqual = "Microsoft.FSharp.Core.Operators.op_GreaterThanOrEqual" 
 let [<Literal>] op_LessThanOrEqual = "Microsoft.FSharp.Core.Operators.op_LessThanOrEqual"       
 let [<Literal>] op_Equality = "Microsoft.FSharp.Core.Operators.op_Equality"
-let [<Literal>] ``<>`` = "Microsoft.FSharp.Core.Operators.(<>)"
+let [<Literal>] op_NotEquals = "Microsoft.FSharp.Core.Operators.(<>)"
 let [<Literal>] ``op_Equals`` = "Microsoft.FSharp.Core.Operators.(=)"
 let [<Literal>] compare = "Microsoft.FSharp.Core.Operators.compare"
 let [<Literal>] max = "Microsoft.FSharp.Core.Operators.max"
@@ -105,10 +105,7 @@ let [<Literal>] ignore = "Microsoft.FSharp.Core.Operators.ignore"
 let [<Literal>] ref = "Microsoft.FSharp.Core.Operators.ref"
 let [<Literal>] op_ColonEquals = "Microsoft.FSharp.Core.Operators.op_ColonEquals"
 let [<Literal>] op_Dereference = "Microsoft.FSharp.Core.Operators.op_Dereference"
-let [<Literal>] op_PipeRight = "Microsoft.FSharp.Core.Operators.op_PipeRight"
 
-let [<Literal>] op_PipeRight2 = "Microsoft.FSharp.Core.Operators.op_PipeRight2"
-let [<Literal>] op_PipeRight3 = "Microsoft.FSharp.Core.Operators.op_PipeRight3"
 let [<Literal>] op_PipeLeft = "Microsoft.FSharp.Core.Operators.op_PipeLeft"
 let [<Literal>] op_PipeLeft2 = "Microsoft.FSharp.Core.Operators.op_PipeLeft2"
 let [<Literal>] op_PipeLeft3 = "Microsoft.FSharp.Core.Operators.op_PipeLeft3"

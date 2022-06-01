@@ -16,6 +16,14 @@ open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
 // Tom Hvitved - Architectural Analysis of Microsoft Dynamics NAV
 // Page 30 - definition of procedure
 
+[<RequireQualifiedAccess>]
+type ExpressionContext =
+    | None
+    | Sequential of chain:FSharpExpr list
+    | BindingVar of FSharpMemberOrFunctionOrValue
+    | LetBinding of var:FSharpMemberOrFunctionOrValue * bindingExpr:FSharpExpr
+    | DecisionTree of decisionExpr:FSharpExpr * targets:ALExpression list
+
 
 type ALProcedureContext =
     {
@@ -23,21 +31,28 @@ type ALProcedureContext =
         identifier : string
         parameters : ALVariable list
         localVariables: ObservableCollection<ALVariable>
-        statements : ObservableCollection<ALStatement>
+        mutable statements : ALStatement
         returnType : ALType option
         entity : FSharpEntity
-        mutable expressionContext : ExpressionContext
+        mutable expressionContext : ObservableCollection<ExpressionContext>
     }
     static member Default = {
         isLocal = false
         identifier = ""
         parameters = []
         localVariables = ObservableCollection()
-        statements = ObservableCollection()
+        statements = FSALExpr Ignore |> Expression
         returnType = None
         entity = Unchecked.defaultof<FSharpEntity>
-        expressionContext = ExpressionContext.None
+        expressionContext = ObservableCollection()
     }
+    
+    static member inExpressionContext (ctx:ExpressionContext) fn (b:ALProcedureContext) =
+        b.expressionContext.Add(ctx)
+        let result = fn b
+        b.expressionContext.Remove(ctx) |> ignore
+        result
+        
     
     
 type ALRecordFieldContext =
@@ -71,3 +86,11 @@ module ALProcedureContext =
     let ensureHasVariable (b:ALProcedureContext) var =
         addIfNotExists b var.name var
             
+            
+    let addBindingVar (b:ALProcedureContext) (variable:FSharpMemberOrFunctionOrValue)=
+        {
+            ALVariable.isMutable = false
+            name = variable.DisplayName
+            altype = variable.FullType |> ALType.ofFSharpType
+        }
+        |> b.localVariables.Add
