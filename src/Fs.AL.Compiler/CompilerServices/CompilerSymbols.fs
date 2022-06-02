@@ -3,7 +3,7 @@
 open System
 open System.Runtime.Serialization
 open FSharp.Compiler.Symbols
-open Fs.AL.Compiler.Reflection
+open Fs.AL.Compiler.Fullname
 open Fs.AL.Core.ALComplexValues
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
@@ -204,8 +204,8 @@ module FSharpEntity =
 module FSharpMemberOrFunctionOrValue =
     
     type private t = FSharpMemberOrFunctionOrValue
-    let isRefOperator (x:t) = x.FullName = FullNameOperators.ref
-    let isNot (x:t) = x.FullName = FullNameOperators.``not``
+    let isRefOperator (x:t) = x.FullName = Fullname.Operators.ref
+    let isNot (x:t) = x.FullName = Operators.``not``
     
 //    let isString (x:t) = x.FullName = FullNameOperators.string
     let getDisplayName (x:t) =

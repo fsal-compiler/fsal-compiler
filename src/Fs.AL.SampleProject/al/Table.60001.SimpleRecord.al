@@ -15,12 +15,4 @@ table 60001 SimpleRecord
         {
         }
     }
-    procedure SampleFunction(input: Text): Integer
-    var
-        sum: Integer;
-    begin
-        sum := SomeNumber + SomeNumber2 + SomeNumber3;
-        exit(sum);
-    end;
-
 }

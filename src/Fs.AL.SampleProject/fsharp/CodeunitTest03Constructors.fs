@@ -13,15 +13,15 @@ type Constructors() =
     inherit ALCodeunit()
     override this.ObjectId = 60003
 
-    member this.newObject1() =
-        let record = SimpleRecord()
-        record.Id <- 12
-        record.SomeNumber <- 20
-        record.SomeNumber
+    // member this.newObject1() =
+    //     let record = SimpleRecord()
+    //     record.Id <- 12
+    //     record.SomeNumber <- 20
+    //     record.SomeNumber
 
-    member this.newObject2() =
-        let record2 = SimpleRecord(Id = 15, SomeNumber = 25)
-        record2.SomeNumber
+    // member this.newObject2() =
+    //     let record2 = SimpleRecord(Id = 15, SomeNumber = 25)
+    //     record2.SomeNumber
 
     // inner let expression not supported
     // member this.newObject3() =
@@ -32,19 +32,19 @@ type Constructors() =
     //         innerRecord
     //     record.SomeNumber
 
-    member this.newObject4() = 
-        SimpleRecord(Id = 12, SomeNumber = 20)
+    // member this.newObject4() = 
+    //     SimpleRecord(Id = 12, SomeNumber = 20)
 
-    member this.newObject5() = 
-        let rec1 =
-            SimpleRecord(Id = 12, SomeNumber = 20)
+    // member this.newObject5() = 
+    //     let rec1 =
+    //         SimpleRecord(Id = 12, SomeNumber = 20)
         
-        let rec2 = 
-            SimpleRecord(Id = 15, SomeNumber = 25)
+    //     let rec2 = 
+    //         SimpleRecord(Id = 15, SomeNumber = 25)
 
-        let mutable rec3 = rec1
-        rec3 <- rec2 
+    //     let mutable rec3 = rec1
+    //     rec3 <- rec2 
 
-        rec3
+    //     rec3
 
 

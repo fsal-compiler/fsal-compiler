@@ -5,7 +5,7 @@ open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage
-open Fs.AL.Compiler.Reflection
+open Fs.AL.Compiler.Fullname
 open Fs.AL.Compiler.Visitors
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
@@ -17,11 +17,20 @@ open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
 // Page 30 - definition of procedure
 
 [<RequireQualifiedAccess>]
+type LetExprKind =
+    | Decision
+    | Declaration
+    | TypeProvider of func:FSharpMemberOrFunctionOrValue * targetType:FSharp.Compiler.Symbols.FSharpType * args:FSharpExpr list
+    | Constructor
+    | Invocation 
+    | Normal
+
+[<RequireQualifiedAccess>]
 type ALExprContext =
     | NoContext
     | Sequential of chain:FSharpExpr list
     | BindingVar of FSharpMemberOrFunctionOrValue
-    | LetBinding of var:FSharpMemberOrFunctionOrValue * bindingExpr:FSharpExpr
+    | LetBinding of bindVar:FSharpMemberOrFunctionOrValue * kind:LetExprKind // var:FSharpMemberOrFunctionOrValue * bindingExpr:FSharpExpr
     | DecisionTree of decisionExpr:FSharpExpr * targets:ALExpression list
     | Constructor of identifier:string
     static member usingCtx (ctx:ALExprContext) (b:ALProcedureContext) fn  =
@@ -35,6 +44,15 @@ type ALExprContext =
         |> Seq.choose (fun f ->
             match f with
             | ALExprContext.Constructor identifier -> identifier |> Some     
+            | _ -> None
+        )
+        |> Seq.tryLast
+        
+    static member getLetBindingCtx (b:ALProcedureContext) =
+        b.expressionContext
+        |> Seq.choose (fun f ->
+            match f with
+            | ALExprContext.LetBinding(memberOrFunctionOrValue, letExprKind) -> (memberOrFunctionOrValue,letExprKind) |> Some     
             | _ -> None
         )
         |> Seq.tryLast
@@ -95,6 +113,14 @@ module ALProcedureContext =
         
     let ensureHasVariable (b:ALProcedureContext) var =
         addIfNotExists b var.name var
+        
+    let ensureHasJTokenVariable (b:ALProcedureContext) =
+        addIfNotExists b "_jtoken"
+            {
+              isMutable = false
+              name= "_jtoken"
+              altype = Simple( SimpleType "JsonToken")
+            }
             
             
     let addBindingVar (b:ALProcedureContext) (variable:FSharpMemberOrFunctionOrValue)=

@@ -6,7 +6,7 @@ open System.Linq
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage
-open Fs.AL.Compiler.Reflection
+open Fs.AL.Compiler.Fullname
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
 
@@ -172,6 +172,30 @@ type ALStatement =
         statements[..statements.Length - 2],statements[statements.Length - 1]
         
     static member toBlock statements = Block statements
+    
+    static member unwrapStatement acc (stat:ALStatement) =
+        match stat with
+        | Sequence(currSt, nextSt) ->
+            let precLeft,lastLeft = ALStatement.collectSequencesLast (currSt) 
+            let precRight,lastRight = ALStatement.collectSequencesLast (nextSt)
+            (precLeft@precRight)@ acc,Sequence(lastLeft, lastRight)
+        | Expression alExpression ->
+            acc, Expression alExpression
+        | st -> acc, st
+    static member unwrapExpression acc (stat:ALExpression) : ALStatement list * ALExpression =
+        match stat with
+        | Binary(left, alBinaryOperator, right) ->
+            let precLeft,lastLeft = ALStatement.unwrapExpression [] (left) 
+            let precRight,lastRight = ALStatement.unwrapExpression [] (right)
+            (precLeft@precRight)@ acc ,Binary(lastLeft, alBinaryOperator, lastRight)
+        | FSALExpr (StatementExpr alStatement) ->
+            let prec,remainingStatement = ALStatement.unwrapStatement [] alStatement
+            match remainingStatement with
+            | Sequence(alStatement, statement) ->
+                prec @ [alStatement], statement |> StatementExpr |> FSALExpr
+            | _ -> prec, remainingStatement |> StatementExpr |> FSALExpr
+        | other -> acc ,other 
+    
     static member collectSequences acc (stat:ALStatement) =
         match stat with
         | Sequence(alStatement, statement) ->

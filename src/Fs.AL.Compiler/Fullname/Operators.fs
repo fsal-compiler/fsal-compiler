@@ -1,5 +1,5 @@
 ﻿[<RequireQualifiedAccess>]
-module Fs.AL.Compiler.Reflection.FullNameOperators
+module Fs.AL.Compiler.Fullname.Operators
 
 // module to store all the allowed operators
 let [<Literal>] op_PipeRight = "Microsoft.FSharp.Core.Operators.(|>)"
@@ -93,6 +93,7 @@ let [<Literal>] ``op_Equals`` = "Microsoft.FSharp.Core.Operators.(=)"
 let [<Literal>] compare = "Microsoft.FSharp.Core.Operators.compare"
 let [<Literal>] max = "Microsoft.FSharp.Core.Operators.max"
 let [<Literal>] min = "Microsoft.FSharp.Core.Operators.min"
+
 let [<Literal>] failwith = "Microsoft.FSharp.Core.Operators.failwith"
 let [<Literal>] invalidArg = "Microsoft.FSharp.Core.Operators.invalidArg"
 let [<Literal>] nullArg = "Microsoft.FSharp.Core.Operators.nullArg"

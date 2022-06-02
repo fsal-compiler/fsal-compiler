@@ -7,7 +7,7 @@ open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Core.ALComplexValues
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
-open Fs.AL.Compiler.Reflection
+open Fs.AL.Compiler.Fullname
 
 module ALType =
     type private t = Fs.AL.Core.ALCoreValues.ALType
@@ -15,7 +15,7 @@ module ALType =
     let rec ofFSharpType (ftype:FSharpType) =
         let fullname = ftype |> FSharpType.getFullName
         match fullname with
-        | FullNameFSharp.ref -> ftype.GenericArguments[0] |> ofFSharpType
+        | Operators.ref -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.byref" -> ftype.GenericArguments[0] |> ofFSharpType
         // array types
         | "Microsoft.FSharp.Core.[]" ->

@@ -9,8 +9,8 @@
 
     <ItemGroup>
         <Compile Include="Logger.fs" />
-        <Compile Include="Reflection\FullNameOperators.fs" />
-        <Compile Include="Reflection\FullNameFSharp.fs" />
+        <Compile Include="Fullname\Operators.fs" />
+        <Compile Include="Fullname\Core.fs" />
         <Compile Include="CompilerServices\CompilerService.fs" />
         <Compile Include="CompilerServices\CompilerSymbols.fs" />
         <Compile Include="CompilerServices\CompilerDeclarations.fs" />
@@ -18,6 +18,7 @@
         <Compile Include="CompilerServices\Visitors.fs" />
         <Compile Include="IntermediateLanguage\ALLanguage.fs" />
         <Compile Include="IntermediateLanguage\TypeReplacements.fs" />
+        <Compile Include="IntermediateLanguage\ALFunctionReplacements.fs" />
         <Compile Include="IntermediateLanguage\ALTypeMapping.fs" />
         <Compile Include="IntermediateLanguage\ALContext.fs" />
         <Compile Include="IntermediateLanguage\FSharpExpressionsMapping.fs" />

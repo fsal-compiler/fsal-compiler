@@ -1,6 +1,7 @@
 ﻿module rec Fs.AL.Compiler.ALCodeGeneration.ALGenerator
 
 open System.Collections.ObjectModel
+open System.Globalization
 open System.IO
 open System.Linq.Expressions
 open Fs.AL.Compiler
@@ -111,6 +112,19 @@ let rec buildExpression (exp:ALExpression) : ExpressionSyntax =
             |> sf.StringLiteralValue
             |> sf.LiteralExpression
             :> ExpressionSyntax
+        | :? double as v ->
+            let token =  v.ToString($"{0:D}",CultureInfo.InvariantCulture) |> sf.ParseToken
+            match token.Kind with
+            | SyntaxKind.DecimalLiteralToken ->
+                sf.DecimalSignedLiteralValue(token)
+                |> sf.LiteralExpression
+                :> ExpressionSyntax
+            | SyntaxKind.Int32LiteralToken ->
+                token
+                |> sf.Int32SignedLiteralValue
+                |> sf.LiteralExpression
+                :> ExpressionSyntax
+            | _ -> failwith "unknown token"
         | _ ->
             sf.Literal(o :?> string)
             |> sf.StringLiteralValue

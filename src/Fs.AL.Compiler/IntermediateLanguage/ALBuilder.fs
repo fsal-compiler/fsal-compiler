@@ -7,7 +7,7 @@ open Fs.AL.Compiler.IntermediateLanguage.ALContext
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.IntermediateLanguage
-open Fs.AL.Compiler.Reflection
+open Fs.AL.Compiler.Fullname
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
 open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
@@ -43,7 +43,7 @@ type ALObjectBuilder with
                 let a = 5
                 args |> Seq.collect id
                 |> Seq.where (fun f ->
-                    f.FullType |> FSharpType.getFullName <> FullNameFSharp.unit)
+                    f.FullType |> FSharpType.getFullName <> Core.unit)
             match mem.IsInstanceMember with
             | true -> paramsFlattened |> Seq.skip 1 
             | false -> paramsFlattened
