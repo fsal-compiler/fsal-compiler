@@ -67,7 +67,7 @@ module ALType =
             Complex (Record name)
         | x when ftype |> FSharpType.hasBaseType<ALSimpleValue> -> Simple (SimpleType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
         | x when ftype |> FSharpType.hasBaseType<ALComplexValue> -> Complex (ComplexType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
-        | x when ftype.TypeDefinition |> FSharpEntity.hasAttribute<ALJson> -> Simple JsonToken // use as json type
+        | x when ftype.TypeDefinition |> FSharpEntity.hasAttribute<AL.Json> -> Simple JsonToken // use as json type
         // todo: handle union type fields too
         | x when ftype.TypeDefinition.IsFSharpUnion ->
             let unioncase = ftype.TypeDefinition.UnionCases

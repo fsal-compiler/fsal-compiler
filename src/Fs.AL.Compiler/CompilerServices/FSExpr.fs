@@ -43,6 +43,7 @@ module FSExpr =
         | FSharpExprPatterns.NewObject(objType, typeArgs, argExprs) -> $"NewObject:{objType}"
         | FSharpExprPatterns.AddressOf(lvalueExpr) -> $"AddressOf:{lvalueExpr}"
         | FSharpExprPatterns.NewRecord(recordType, argExprs) -> $"NewRecord:%A{recordType}"
+        | FSharpExprPatterns.FSharpFieldGet(objExprOpt, recordOrClassType, fieldInfo) -> $"FSharpFieldGet:%A{fieldInfo.Name}"
 
         | v ->
             let vt = v

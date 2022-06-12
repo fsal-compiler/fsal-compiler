@@ -5,9 +5,7 @@ open System.Runtime.InteropServices
 
 
 
-[<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]
-type ALJson() = 
-    inherit System.Attribute()
+
     
 [<AttributeUsage(AttributeTargets.All,Inherited=true,AllowMultiple=false)>]
 type ALName(str:string) = 
@@ -21,16 +19,20 @@ type ALName(str:string) =
 module AL = 
     
     /// single-instance codeunit for modules
+    [<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]
     type Codeunit(id:int) =
         inherit System.Attribute()
         member this.ObjectId : int = id
         
     /// table for f# record types
-    [<AttributeUsage(AttributeTargets.All,Inherited=true,AllowMultiple=false)>]        
+    [<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]     
     type Table(id:int) =
         inherit System.Attribute()
         member this.ObjectId : int = id
-
+    
+    [<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]
+    type Json() = 
+        inherit System.Attribute()
 
 [<AbstractClass>]
 type ALSimpleValue() = do ()

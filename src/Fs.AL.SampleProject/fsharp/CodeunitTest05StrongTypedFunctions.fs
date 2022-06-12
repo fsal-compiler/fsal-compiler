@@ -18,7 +18,7 @@ type private Employee = BaseApplicationALPackage.Tables.Employee
 type private ``User Setup`` = BaseApplicationALPackage.Tables.``User Setup``
 
 
-[<ALSingleInstanceCodeunit(60005)>]
+[<AL.Codeunit(60005)>]
 module StrongTypedFunctions =
 
     let GetSampleCustomerName () =

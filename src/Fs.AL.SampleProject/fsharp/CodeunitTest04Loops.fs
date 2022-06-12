@@ -9,7 +9,7 @@ open Fs.AL.SampleProject.RecordTest01
 //#nowarn "20"
 
 
-[<ALSingleInstanceCodeunit(60004)>]
+[<AL.Codeunit(60004)>]
 module LoopsCodeunit =
     do()
     // let add2 x = x + 2

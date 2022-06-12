@@ -20,7 +20,7 @@ type SampleJsonProvider =
 }
 """>
 
-[<ALSingleInstanceCodeunit(60006)>]
+[<AL.Codeunit(60006)>]
 module JsonProvider =
     do()
     let getJsonProp1 (content: string)  = 

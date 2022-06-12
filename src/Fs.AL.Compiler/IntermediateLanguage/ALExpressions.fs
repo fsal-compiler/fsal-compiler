@@ -61,18 +61,13 @@ module FSharpOperators =
         let a1 = ALExpression.ofFSharpExpr b argExprs[1]
         ALExpression.createBinary a0 operator a1
         
-    
-            
-        
-        
-        
         
     let private handleOperatorFailwith b argExprs =
         (List.map (ALExpression.ofFSharpExpr b) argExprs)
         |> ALExpression.createInvocation "Error" 
 
 
-module ALExpressionTranslation =
+module FSALExpression =
     
     let translateDecisionTreeSuccess (b:ALProcedureContext) (exp:FSharpExpr) =
         match exp with
@@ -203,7 +198,19 @@ module ALExpressionTranslation =
                             )
 //                        let rr = argExprs[0] |> ALExpression.ofFSharpExpr b
                         let v1 = 5
-                        LetExprKind.Override, xprt 
+                        LetExprKind.Override, xprt
+                    | Core.``JsonSerializer.Deserialize`` ->
+                        let expkind = LetExprKind.TypeProvider (memberOrFunc,typeArgs2[0],argExprs)
+                        let xprt = 
+                            ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b.expressionContext (fun f ->
+                                letBindingExpr |> ALExpression.ofFSharpExpr b
+                            )
+                        match xprt with
+                        | FSALExpr (InvocationWithoutTarget (methodname,args)) ->
+                            let idf = ALExpression.createIdentifer letBindingVar
+                            LetExprKind.Override, ALExpression.createMemberAccessInvocation idf methodname args
+                        | _ -> raise (NotImplementedException()) 
+                        
                     | _ ->   
                         let test1 = 1
 //                        let (FSharpExprPatterns.Coerce(c) ) = argExprs[0]
@@ -551,7 +558,11 @@ module ALExpression =
         Logger.logDebug $"fsharpexpr: %s{FSExpr.getPatternName exp}"
         
         match exp with
-                
+        | FSharpExprPatterns.FSharpFieldGet(objExprOpt, recordOrClassType, fieldInfo) ->
+            //TODO: proper implementation            
+//            raise (NotImplementedException())
+            Identifier fieldInfo.Name
+
         | FSharpExprPatterns.NewRecord(recordType, argExprs) ->
             // Todo : new record
             let assignTo = b.expressionContext |> ALExprContext.getLetBindingCtx
@@ -572,11 +583,11 @@ module ALExpression =
                 assignmentBlock |> ALExpression.fromALStatement
         | FSharpExprPatterns.AddressOf(lvalueExpr) -> lvalueExpr |> ALExpression.ofFSharpExpr b
         | FSharpExprPatterns.DecisionTreeSuccess (decisionTargetIdx, decisionTargetExprs) ->
-            let result = ALExpressionTranslation.translateDecisionTreeSuccess b exp
+            let result = FSALExpression.translateDecisionTreeSuccess b exp
             result 
             
         | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) ->
-            ALExpressionTranslation.translateDecisionTree b exp
+            FSALExpression.translateDecisionTree b exp
         | FSharpExprPatterns.Let((bindingVar, bindingExpr, debug1), bodyExpr) ->
             // fail if inner let expr
             match bindingExpr with
@@ -591,7 +602,7 @@ module ALExpression =
                            $"file:{lBindVar.DeclarationLocation.FileName}"
                         ] |> String.concat "\n")
             | _ -> () 
-            let result = ALExpressionTranslation.translateLet b exp
+            let result = FSALExpression.translateLet b exp
             result 
             
         | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, argExprs) ->
@@ -601,7 +612,7 @@ module ALExpression =
                 failwith "test"
             else
             if memberOrFunc.IsPropertySetterMethod || memberOrFunc.IsImplicitConstructor then
-                ALExpressionTranslation.translatePropertySet b objExprOpt memberOrFunc argExprs
+                FSALExpression.translatePropertySet b objExprOpt memberOrFunc argExprs
             else
                 
                 let replacementargs =
@@ -610,7 +621,8 @@ module ALExpression =
                       ALFunctionReplacementArgs.toAL = ofFSharpExpr b
                       objExpr = objExprOpt
                       funcMember = memberOrFunc
-                      argExprs = argExprs }
+                      argExprs = argExprs
+                    }
                     
                 // match memberfunctionorvalue
                 match memberOrFunc with
@@ -628,9 +640,9 @@ module ALExpression =
                 | HasALFunctionReplacement b replacementFn ->
                     replacementFn replacementargs
                 
-                | ALFunctionReplacements.HasReplacementFunction (ofFSharpExpr b) objExprOpt memberOrFunc argExprs result ->
+                | ALFunctionReplacements.HasReplacementFunction (ofFSharpExpr b) objExprOpt memberOrFunc typeArgs2 argExprs result ->
                     let r = 5
-                    let replacement = result (ofFSharpExpr b) objExprOpt memberOrFunc argExprs
+                    let replacement = result (ofFSharpExpr b) objExprOpt memberOrFunc typeArgs2 argExprs
                     match replacement with
                     | NaryExpression (Invocation(Binary(_tgt, _memberaccess, _member), _args)) ->
                         match _tgt with
@@ -834,21 +846,14 @@ module ALExpression =
                 Sequence (assignmentExpr,Identifier genField.name |> ALStatement.ofExpression) |> ALExpression.fromALStatement
             | Some (letBindVar,bindingKind), FSALExpr (InvocationWithoutTarget (methodname,args)) ->
                 ALProcedureContext.ensureHasJTokenVariable b
-//                response.ReadFrom(json);
-//                response.SelectToken('details',_jtoken);
-//                details := _jtoken;
-                
+                failwith "/////"
                 let statement =
                     match bindingKind with
                     | LetExprKind.TypeProvider(memberOrFunctionOrValue, targetType, exprs) ->
                         let test1 = 1
                         // jsonParse
                         ALExpression.createMemberAccessInvocation (Identifier letBindVar.DisplayName) methodname args
-                        
                     | _ -> failwith "invalid binding"
-                    
-//                failwith "todo"
-//                ALExpression.createMemberAccessInvocation (Identifier target.DisplayName) methodname args
                 statement
                 
             | Some (letBindVar,bindingKind), FSALExpr (InvocationWithoutLastArg (target,methodname,args)) -> // target "reader", args [constant firstname]
@@ -961,7 +966,7 @@ module ALExpression =
             
             
         | FSharpExprPatterns.ValueSet(valToSet, valueExpr) ->
-            let result = ALExpressionTranslation.translateValueSet b exp
+            let result = FSALExpression.translateValueSet b exp
             result 
            
             
