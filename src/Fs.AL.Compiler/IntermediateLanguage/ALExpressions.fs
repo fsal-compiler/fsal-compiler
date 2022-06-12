@@ -121,6 +121,12 @@ module ALExpressionTranslation =
             // determine let expression kind
             let bindingCtx,bindings =
                 match letBindingExpr with
+                | FSharpExprPatterns.NewRecord _ ->
+                    let t = 1
+                    ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,LetExprKind.NewRecord)) b.expressionContext
+                        (fun f -> LetExprKind.Override,letBindingExpr |> ALExpression.ofFSharpExpr b
+                    )
+                    
                 // empty variable declaration
                 | FSharpExprPatterns.NewObject(objType, typeArgs, argExprs) ->
                     match argExprs with
@@ -545,6 +551,25 @@ module ALExpression =
         Logger.logDebug $"fsharpexpr: %s{FSExpr.getPatternName exp}"
         
         match exp with
+                
+        | FSharpExprPatterns.NewRecord(recordType, argExprs) ->
+            // Todo : new record
+            let assignTo = b.expressionContext |> ALExprContext.getLetBindingCtx
+            match assignTo with
+            | None -> raise (NotImplementedException())
+            | Some (letBindVal,kind) ->
+                let identifier = ALExpression.createIdentifer letBindVal
+                let assignedValues = argExprs |> Seq.map (ALExpression.ofFSharpExpr b)
+                let props = recordType.TypeDefinition.FSharpFields |> Seq.map (fun f -> f.Name) 
+                let assignmentBlock =
+                    (props,assignedValues) ||> Seq.zip
+                    |> Seq.map (fun (prop,value) ->
+                        let memaccess = ALExpression.createMemberAccess (identifier) prop
+                        Assignment(memaccess,value) )
+                    |> Seq.toList
+                    |> Block
+                let f = 1
+                assignmentBlock |> ALExpression.fromALStatement
         | FSharpExprPatterns.AddressOf(lvalueExpr) -> lvalueExpr |> ALExpression.ofFSharpExpr b
         | FSharpExprPatterns.DecisionTreeSuccess (decisionTargetIdx, decisionTargetExprs) ->
             let result = ALExpressionTranslation.translateDecisionTreeSuccess b exp

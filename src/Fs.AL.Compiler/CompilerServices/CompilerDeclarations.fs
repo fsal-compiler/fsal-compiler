@@ -45,10 +45,11 @@ module FSharpImplementation =
                 | "CompareTo" | "GetHashCode" | "Equals" -> false
                 | _ -> true
             | false -> raise (NotImplementedException())
-        //        | x when x.CompiledName = "get_ObjectId" -> false 
-        | x when x.IsConstructor || not x.IsMember -> false
-        | x when x.IsValue -> false
+        //        | x when x.CompiledName = "get_ObjectId" -> false
+        | x when x.IsConstructor  -> false
+        //&& not x.IsMember
         | x when x.IsFunction -> true
+        | x when x.IsValue -> false
         | _ -> failwith "unknown val"  
              
     type FSharpEntityImpl =
@@ -75,7 +76,9 @@ module FSharpImplementation =
                     | _ -> loop acc tail'
                 | t.MemberOrFunctionOrValue(mfv, curriedArgs, body) ->
                     let enclosingEntity = mfv.ApparentEnclosingEntity
-                    
+                    if enclosingEntity.CompiledName = "AzureFnTest" then
+                        let d = 1
+                        ()
                     let collectMembers() =
                         if shouldCollectMfv mfv then
                             let entityMember = (mfv, curriedArgs, body)

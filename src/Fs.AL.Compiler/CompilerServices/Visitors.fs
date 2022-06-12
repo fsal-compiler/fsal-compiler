@@ -15,7 +15,7 @@ let rec visitFunctionBody (g:unit -> unit) (f) (e:FSharpExpr)  =
     Logger.logDebug $"visit: %s{FSExpr.getPatternName e}"
     let visit = FSExpr.getPatternName e
     let dbg = 5
-    match e with 
+    match e with
     | FSharpExprPatterns.AddressOf(lvalueExpr) -> 
         visitFunctionBody f lvalueExpr
     | FSharpExprPatterns.AddressSet(lvalueExpr, rvalueExpr) -> 

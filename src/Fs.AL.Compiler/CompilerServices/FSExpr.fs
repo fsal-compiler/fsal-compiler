@@ -42,7 +42,7 @@ module FSExpr =
         | FSharpExprPatterns.IfThenElse (guardExpr, thenExpr, elseExpr) -> $"IfThenElse:{guardExpr.Range.Start}"
         | FSharpExprPatterns.NewObject(objType, typeArgs, argExprs) -> $"NewObject:{objType}"
         | FSharpExprPatterns.AddressOf(lvalueExpr) -> $"AddressOf:{lvalueExpr}"
-            
+        | FSharpExprPatterns.NewRecord(recordType, argExprs) -> $"NewRecord:%A{recordType}"
 
         | v ->
             let vt = v
