@@ -30,7 +30,8 @@ module FSharpSymbol =
                 v.AbbreviatedType
                 |> FSharpType.getRootType
             roottype.TypeDefinition.FullName
-            
+        | :? FSharpMemberOrFunctionOrValue as v ->
+            v.FullName
         | n -> raise (NotImplementedException($"symbol not implemented {n}"))
         
     let getRootType (x:t) =
@@ -144,6 +145,7 @@ module FSharpType =
 #if DEBUG
         match t with
         | "Microsoft.FSharp.Core.[]" -> () 
+        | "Microsoft.FSharp.Core.Unit" -> () 
         | _ when t.StartsWith("Microsoft.FSharp") ->  failwith $"invalid type {t}"
         | _ -> ()
 #endif

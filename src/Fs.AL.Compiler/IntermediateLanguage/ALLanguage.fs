@@ -252,6 +252,7 @@ type ALStatement =
             
         match statement with
         | Block alExprs ->
+            let b1 = 1
             Block (alExprs |> List.map replaceStatement )
         | Sequence(alStatement, statement) ->
             Sequence(replaceStatement alStatement, replaceStatement statement)

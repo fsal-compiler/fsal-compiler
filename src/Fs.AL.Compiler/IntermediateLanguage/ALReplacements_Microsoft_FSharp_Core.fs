@@ -9,7 +9,8 @@ open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.ALSimpleValues
 
-let replacements = [
+let GetArray = 
+    //"Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray"
     { new IALFunctionReplacement with
         member this.FunctionName = "Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray"
         member this.Replacement =
@@ -60,6 +61,7 @@ let replacements = [
                 | _ -> failwithf $"not an array type"
             )
     }
-]
+    
+    
 
 

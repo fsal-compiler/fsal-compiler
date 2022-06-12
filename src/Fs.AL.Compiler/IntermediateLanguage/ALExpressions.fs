@@ -31,6 +31,7 @@ module FSharpOperators =
         | Operators.op_Equals -> binaryOp Equals  
         | Operators.op_GreaterThan -> binaryOp GreaterThan    
         | Operators.op_LessThan -> binaryOp LessThan    
+        | Operators.op_Modulo -> binaryOp Mod    
         | _ -> None
         
     let private handleOperatorPipeRight b (argExprs:FSharpExpr list) = 
@@ -86,7 +87,14 @@ module ALExpressionTranslation =
                 )
                 |> Seq.last
             let chosenDecision = decisionCtx[decisionTargetIdx]
-            chosenDecision
+            match chosenDecision with
+            | FSALExpr (StatementExpr statement) ->
+                let prec,last = ALStatement.unwrapStatement [] statement
+                match prec with
+                | [] -> last |> ALExpression.fromALStatement
+                | prec -> Block (prec @ [ last ] ) |> ALExpression.fromALStatement
+            | _ ->
+                chosenDecision
         | _ ->  failwith "invalid expression"
             
         
@@ -128,9 +136,16 @@ module ALExpressionTranslation =
                     )
                 // decision tree expr
                 | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) ->
-                    let result = translateDecisionTree b letBindingExpr
+                    let ekind = LetExprKind.Decision
+                    let r = 
+                        ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,ekind)) b.expressionContext 
+                            (fun f ->
+                            let result = letBindingExpr |> ALExpression.ofFSharpExpr b
+                            result
+                        )
                     let v = 5
-                    LetExprKind.Decision,letBindingExpr |> ALExpression.ofFSharpExpr b
+                    //letBindingExpr |> ALExpression.ofFSharpExpr b
+                    LetExprKind.Decision, r
                 // jsonprovider casts
                 | FSharpExprPatterns.Coerce(targetType, inpExpr) ->
                     match inpExpr with
@@ -241,7 +256,9 @@ module ALExpressionTranslation =
                             let v1 = 1
                             LetExprKind.Normal,result
                                                 
-                        | _ -> failwith "test"
+                        | _ ->
+                            // default 
+                            LetExprKind.Normal,letBindingExpr |> ALExpression.ofFSharpExpr b
                 | _ -> LetExprKind.Normal,letBindingExpr |> ALExpression.ofFSharpExpr b
  
             // declare AL variable
@@ -403,7 +420,7 @@ module ALExpressionTranslation =
     let translateDecisionTree b expr : ALExpression =
         match expr with 
         | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) ->
-            
+//            Debug.Assert(b.expressionContext.Count > 0)
             let context =
                 let containingLet =
                     b.expressionContext
@@ -412,13 +429,16 @@ module ALExpressionTranslation =
                         | ALExprContext.LetBinding(valexpr, bindingExpr) ->
                             valexpr |> Some | _ -> None )
                     |> Seq.tryLast
-                let dafdsf =5 
                 let targets =
                     decisionTargets
                     |> List.map (fun (args,expr) ->
                         if args.Length > 0
-                            then failwith "args"
-                        let result =  expr |> ALExpression.ofFSharpExpr b
+                            then
+                                let debug = 1
+                                ()
+                        let result =
+                            expr |> ALExpression.ofFSharpExpr b
+                            
                         match containingLet with
                         | Some v ->
                             let preceding,last = ALStatement.collectSequencesLast (result |> ALStatement.ofExpression)
@@ -440,11 +460,6 @@ module ALExpressionTranslation =
                         let asd1 = 5
                         createdExpression
                 )
-            let assignedLetVar =
-                match b.expressionContext |> Seq.last with
-                | ALExprContext.LetBinding(memberOrFunctionOrValue, bindingExpr) ->
-                    Some memberOrFunctionOrValue
-                | _ -> None
             res
             
         | _ -> failwith "invalid expression"
@@ -556,8 +571,14 @@ module ALExpression =
                 // match memberfunctionorvalue
                 match memberOrFunc with
                 | FSharpOperators.HasFSharpOperator b argExprs result -> result
+//                | FSharpSymbol.IsTypeCast ->
+//                        let v1 = 1
+//                        let exp = argExprs[0] |> ALExpression.ofFSharpExpr b
+//                        let castFrom = typeArgs2[0] |> FSharpType.getRootType
+//                        let castTo = let.FullType |> FSharpType.getRootType
+//                        let casted = ALExpression.handleTypeCast b castFrom castTo exp letBindingVar
+//                        LetExprKind.Override ,casted |> ALExpression.fromALStatement
                 | _ -> 
-            
                 // match member fullname
                 match memberOrFunc.FullName with
                 | HasALFunctionReplacement b replacementFn ->
@@ -646,7 +667,9 @@ module ALExpression =
                     //                | "Fs.AL.Core.ALSimpleValues.ReadFrom" ->
                     | "Microsoft.FSharp.Core.Operators.ignore" -> FSALExpr Ignore
                     | "Microsoft.FSharp.Core.Operators.ref" -> FSALExpr Ignore
+                    | "Microsoft.FSharp.Core.Operators.raise" -> ALExpression.createInvocation "Message" [Constant "raise-exception"]
                     | "Microsoft.FSharp.Collections.Array.length" ->
+                    
                         match argExprs with
                         | [FSharpExprPatterns.Value(v)] ->
                             match ALType.ofFSharpType v.FullType with
@@ -690,18 +713,12 @@ module ALExpression =
                         match isStaticReference with
                         | None -> failwith "could not resolve type" 
                         | Some reftype ->
-                            let dispName = "_static_"+ent.DisplayName
-                            let staticVar =
-                                {
-                                isMutable = false
-                                name = dispName
-                                altype = reftype
-                                }
-                            b.localVariables.Add staticVar    
+                            let smodule = ALVariable.createStaticModule ent reftype
+                            smodule |> ALProcedureContext.ensureHasVariable b     
                         
                             let expr =
                                 ALExpression.createMemberAccessInvocation
-                                    (Identifier dispName)
+                                    (Identifier smodule.name)
                                     memberOrFunc.DisplayName
                                     (argExprs |> List.map (ofFSharpExpr b))
                             expr

@@ -90,6 +90,7 @@ let [<Literal>] op_LessThanOrEqual = "Microsoft.FSharp.Core.Operators.op_LessTha
 let [<Literal>] op_Equality = "Microsoft.FSharp.Core.Operators.op_Equality"
 let [<Literal>] op_NotEquals = "Microsoft.FSharp.Core.Operators.(<>)"
 let [<Literal>] ``op_Equals`` = "Microsoft.FSharp.Core.Operators.(=)"
+let [<Literal>] ``op_Modulo`` = "Microsoft.FSharp.Core.Operators.(%)"
 let [<Literal>] compare = "Microsoft.FSharp.Core.Operators.compare"
 let [<Literal>] max = "Microsoft.FSharp.Core.Operators.max"
 let [<Literal>] min = "Microsoft.FSharp.Core.Operators.min"

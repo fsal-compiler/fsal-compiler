@@ -163,6 +163,7 @@ module GenALStatement =
         buildStatements level [] [alStatement] |> List.head
     
     let createExit (fsalStatement:ALExpression) =
+     
         let alexp = fsalStatement |> GenALExpression.buildExpression :?> CodeExpressionSyntax
         let exitstatement =
             sf.ExitStatement(alexp)
@@ -170,6 +171,7 @@ module GenALStatement =
                 .WithCloseParenthesisToken(sf.Token(sk.CloseParenToken))
                 .WithSemicolonToken(sf.Token(sk.SemicolonToken))
         exitstatement
+        
     let createAssignment (level:int) ((assignedTo:ALExpression),(expression:ALExpression)) =
         let leveltrivia = [| for i = 0 to level do t._4spaces |] |> Array.concat
         let keywordLeading = Array.append t.lf4spaces leveltrivia
@@ -185,9 +187,8 @@ module GenALStatement =
                     .WithLeadingTrivia(keywordLeading)
             assignStatement
         | FSALExpr (StatementExpr (state)) ->
-            let preceding,last = ALStatement.collectSequencesLast state
-            let dfdfg = 5
             let target = assignedTo |> GenALExpression.buildExpression :?> CodeExpressionSyntax
+            let t = 1
             let assignedvalue =
                 match expression with
                 | _ -> expression |> GenALExpression.buildExpression :?> CodeExpressionSyntax
@@ -245,12 +246,9 @@ module GenALStatement =
                 let lastThen, precedingThen =
                     let all = ALStatement.collectSequences [] (Sequence(seq1, seq2))
                     all.Head, all.Tail |> List.rev
-                let fdgfdg =5
                 let preceding : StatementSyntax list = precedingThen |> buildStatements (level) []
                 let last = [Assignment(tgt,lastThen |> ALExpression.ofALStatement)] |> buildStatements (level) []
                 let blockStatement = createBlock level (preceding @ last ) 
-//                let precedingThen,lastThen = thenStatements[..thenStatements.Length - 2],thenStatements[thenStatements.Length - 1]
-//                let st : StatementSyntax list = [lastThen] |> buildStatements (level+1) []
                 match elseExpOpt with
                 | Some _ -> blockStatement.WithSemicolonToken(sf.Token(sk.None))
                 | None ->
@@ -260,11 +258,6 @@ module GenALStatement =
             | Block alStatements,_ ->
                 let statements = alStatements |> buildStatements (level+2) []
                 let block = GenALStatement.createBlock (level+1) statements
-//                let stat = ALStatementImpl.createBlock (level+1) alStatements
-//                let st  =
-//                    [Block alStatements] |> buildStatements (level+1) []
-//                    |> List.head
-//                    :?> BlockSyntax 
                 match elseExpOpt with
                 | Some _ -> block.WithSemicolonToken(sf.Token(sk.None))
                 | None -> block
@@ -274,17 +267,27 @@ module GenALStatement =
                 | Some _ ->  sf.ExpressionStatement(expr)
                 | None -> sf.ExpressionStatement(expr).WithSemicolonToken(sf.Token(sk.SemicolonToken))
                 |> (fun f -> f.WithTrailingTrivia(sf.Space))
-                |> (fun f -> f.WithLeadingTrivia(Array.append [|sf.Linefeed;sf.Linefeed|] t.lf12spaces))
+                |> (fun f -> f.WithLeadingTrivia(Array.append leveltrivia t.lf12spaces))
             | Assignment(assignedTo, expression),Some _ ->
                 (GenALStatement.createAssignment (level + 1) (assignedTo,expression)).WithSemicolonToken(sf.Token(sk.None))
             | Assignment(assignedTo, expression),None ->
                 GenALStatement.createAssignment (level + 1) (assignedTo,expression)
             | Exit (ifx),elsex ->
+//                match ifx with
+//                | FSALExpr (StatementExpr (Block alStatements)) ->
+//                    let last = alStatements[alStatements.Length - 1]
+//                    let prec = alStatements[..alStatements.Length - 2] |> List.map (GenALStatement.ofALStatement level)
+//                    let exit1 = GenALStatement.createExit (last |> ALExpression.ofALStatement)
+//                    let blockst = GenALStatement.createBlock level (prec @ [ exit1 ])
+//                    match elsex with
+//                    | Some _ -> blockst.WithSemicolonToken(sf.Token(sk.None))
+//                    | None -> blockst
+//                | _ ->                      
                 let exit1 = GenALStatement.createExit ifx
                 match elsex with
                 | Some _ -> exit1.WithSemicolonToken(sf.Token(sk.None))
                 | None -> exit1
-            | _ -> failwithf $"unhandled case"
+            | n -> failwithf $"unhandled case {n}"
             
         let alelseopt : (StatementSyntax option) = elseExpOpt |> Option.map (fun f ->
             match f with
@@ -295,6 +298,7 @@ module GenALStatement =
                 let exp = e |> GenALExpression.buildExpression :?> CodeExpressionSyntax
                 let st = exp |> sf.ExpressionStatement
                 st.WithSemicolonToken(sf.Token(sk.SemicolonToken))
+                    .WithLeadingTrivia(Array.append leveltrivia t.lf12spaces)
             | Assignment(assignedTo, FSALExpr(StatementExpr (IfStatement(guard, th, els)))) ->
                 
                 match th with

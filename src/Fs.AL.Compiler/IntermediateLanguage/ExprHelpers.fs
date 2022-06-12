@@ -178,6 +178,13 @@ module ALVariable =
             altype = Complex complexType
         }
         
+    let createStaticModule (entity:FSharpEntity) refType =
+        let dispName = "@s@"+ entity.DisplayName
+        {
+            name = dispName
+            isMutable = false
+            altype = refType
+        }
     
     /// compiler generated json token
     let createGenJsonToken target targetJsonProp (localvars:ICollection<ALVariable>) =

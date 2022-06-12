@@ -82,6 +82,7 @@ type ALObjectBuilder with
     static member withALField (context: ALObjectBuilder) (fsmember:(FSharpMemberOrFunctionOrValue )) =
         let (mem) = fsmember
         
+        
         match mem.IsProperty with 
         | false -> failwithf $"bug"
         | true ->
@@ -254,6 +255,7 @@ with
         let updatedBuilder =
             fields
             |> Seq.append inheritedFields  
+            |> Seq.where (fun f -> f.FullType.IsFunctionType = false)
             |> Seq.where (Helpers.isALObjectPropertyOverride >> not)
             |> Seq.fold ALObjectBuilder.withALField b
             

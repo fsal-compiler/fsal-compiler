@@ -9,25 +9,40 @@ open Fs.AL.SampleProject.RecordTest01
 //#nowarn "20"
 
 
-// [<ALSingleInstanceCodeunit(60004)>]
-// module SingleInstanceModule =
-//     let add2 x = x + 2
+[<ALSingleInstanceCodeunit(60004)>]
+module LoopsCodeunit =
+    do()
+    // let add2 x = x + 2
 
-//    member this.recursiveExample(n: int) =
-//        // note that AL does not support nested let bindings
-//        let newvalue =
-//            if n > 1 then
-//                n + this.recursiveExample (n - 1)
-//            else
-//                n
-//        newvalue
+    let rec recursiveExample(n: int) =
+       let newvalue =
+            if n > 1 then
+               n + recursiveExample (n - 1)
+            else
+               n
+       newvalue
 
-    // member this.recursiveExample2(n: int) =
-    //     // note that AL does not support nested let bindings
-    //     let newvalue =
-    //         if n > 1 then
-    //             n + this.recursiveExample (n - 1)
-    //         else
-    //             n
+    let whileLoopExample () = 
+        let mutable i = 0
+        while i < 5 do
+            stdout.WriteLine "hello" 
+            i <- i + 1 
+    
 
-    //     newvalue
+    
+            
+    // TODO: reimplement
+    // let forEachLoopExample () = 
+    //     let list1 = ResizeArray()
+    //     list1.Add(1)
+    //     list1.Add(2)
+    //     list1.Add(3)
+
+    //     for i in list1 do
+    //         stdout.WriteLine "hello" 
+            
+    // let StringConcat (separator : string, stringList : ResizeArray<string>)  = 
+    //     let mutable results = "" 
+    //     for addr in stringList do
+    //         results <- results + separator + addr
+    //     results.Substring(1)

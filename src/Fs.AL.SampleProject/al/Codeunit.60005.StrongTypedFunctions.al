@@ -11,14 +11,16 @@ codeunit 60005 StrongTypedFunctions
 
     procedure CreateSampleCustomer()
     var
+        ".sampleCustomer": Record Customer;
         sampleCustomer: Record Customer;
-        returnVal: Record Customer;
     begin
-        returnVal."No." := 'customer1';
-        returnVal.Name := 'John';
-        returnVal."E-Mail" := 'johnsmith@example.com';
-        returnVal."Phone No." := '123123123';
-        sampleCustomer := returnVal;
+        begin
+            ".sampleCustomer"."No." := 'customer1';
+            ".sampleCustomer".Name := 'John';
+            ".sampleCustomer"."E-Mail" := 'johnsmith@example.com';
+            ".sampleCustomer"."Phone No." := '123123123';
+        end;
+        sampleCustomer := ".sampleCustomer";
         sampleCustomer.Insert();
     end;
 
@@ -26,10 +28,12 @@ codeunit 60005 StrongTypedFunctions
     var
         returnVal: Record Employee;
     begin
-        returnVal."No." := lastname;
-        returnVal."First Name" := firstname;
-        returnVal."E-Mail" := firstname + '.' + lastname + '@business.com';
-        returnVal."Phone No." := '123123123';
-        exit(returnVal);
+        begin
+            returnVal."No." := lastname;
+            returnVal."First Name" := firstname;
+            returnVal."E-Mail" := firstname + '.' + lastname + '@business.com';
+            returnVal."Phone No." := '123123123';
+            exit(returnVal);
+        end;
     end;
 }

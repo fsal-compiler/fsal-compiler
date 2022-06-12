@@ -22,12 +22,12 @@ type ControlCodeunit() =
     // member this.ifElseReturn(condition: bool) =
     //     if condition then 2 else 7
 
-//    member this.ifElseAssign(condition: bool) =
-//        // this compiles into two separate assignments
-//        let ifelseassignment =
-//            if condition then 2 else 7
-//
-//        ifelseassignment
+    // member this.ifElseAssign(condition: bool) =
+    //    // this compiles into two separate assignments
+    //    let ifelseassignment =
+    //        if condition then 2 else 7
+
+    //    ifelseassignment
 
     // member this.patternmatch1(input: int) =
     //     let result =
@@ -56,17 +56,17 @@ type ControlCodeunit() =
     //     ALDialog.Message("matched result:" + result)
 
 
-    // member this.patternmatch4 someText =
-    //     let result =
-    //         match someText with
-    //         | "a"
-    //         | "b"
-    //         | "c" -> "a, b or c"
-    //         | nameof someText 
-    //         | CONSTANT -> "compile-time constant"
-    //         | v when v.StartsWith "d" -> "starts with d"
-    //         | v when v.EndsWith "e" -> "ends with e"
-    //         | _ -> "other text"
+    member this.patternmatch4 someText =
+        let result =
+            match someText with
+            | "a"
+            | "b"
+            | "c" -> "a, b or c"
+            | nameof someText 
+            | CONSTANT -> "compile-time constant"
+            | v when v.StartsWith "d" -> "starts with d"
+            | v when v.EndsWith "e" -> "ends with e"
+            | _ -> "other text"
 
-    //     ALDialog.Message("matched result:" + result)
+        ALDialog.Message("matched result:" + result)
 
