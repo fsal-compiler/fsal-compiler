@@ -10,7 +10,9 @@ open Fs.AL.Compiler.CompilerService
 open Fs.AL.Compiler.IntermediateLanguage
 open Microsoft.FSharp.Core
 
+#if DEBUG
 Directory.SetCurrentDirectory(__SOURCE_DIRECTORY__ + @"./../Fs.AL.SampleProject/")
+#endif
 
 let settings =
     match "fsal.json" |> File.Exists with
@@ -20,23 +22,7 @@ let settings =
         |> File.ReadAllText
         |> JsonSerializer.Deserialize<FSharpToALCompilerSettings>
 
-//let testsettings =
-//    {
-//        sourcePath = Some @"C:\Users\kast\source\myrepos\Fs.AL\src\Fs.AL.SampleProject\fsharp"
-//        outputPath = Some @"C:\Users\kast\source\myrepos\Fs.AL\src\Fs.AL.SampleProject\al"
-//        includePaths = Some [
-//            "C:\\Users\\kast\\source\\myrepos\\Fs.AL\\src\\Fs.AL.SampleProject\\fsharp\\bin\\Debug\\net6.0-windows\\"
-//            "C:\\Users\\kast\\source\\myrepos\\Fs.AL\\src\\Fs.AL.SampleProject\\fsharp\\bin\\Debug\\net6.0-windows\\lib\\"
-//            "C:\\Program Files\\dotnet\\packs\\Microsoft.NETCore.App.Ref\\6.0.3\\ref\\net6.0"
-//        ]
-//        includeDlls = Some [
-//            "C:\\Users\\kast\\.nuget\\packages\\fable.jsonprovider\\1.0.1\\lib\\netstandard2.0\\Fable.JsonProvider"
-//        ]
-//    }
-//let settings = testsettings
-
 let starttime = DateTime.Now
-
 let fsproj =
     let sourcedir = 
         match settings.sourcePath with
@@ -51,7 +37,6 @@ let fsharpImplementations =
     |> Seq.map FSharpImplementation.ofImplementationFileDeclaration
     |> Seq.collect id
     |> Seq.toArray
-
 
 let replacementfunctions =
     let t = typeof<IALFunctionReplacement>
