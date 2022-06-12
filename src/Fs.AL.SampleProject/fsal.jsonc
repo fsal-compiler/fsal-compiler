@@ -9,6 +9,6 @@
     ],
     "includeFiles": [
         // "CodeunitTest01Simple.fs",
-        "CodeunitTest06JsonProvider.fs"
+        "RecordTest03FSharpRecords.fs"
     ]
 }

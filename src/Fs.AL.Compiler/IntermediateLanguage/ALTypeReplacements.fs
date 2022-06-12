@@ -11,11 +11,8 @@ open Fs.AL.Core.ALCoreValues
 //    |> Seq.map (fun f -> $"let [<Literal>] {f.Name} = \"{f.FullName}\"")
 //    |> Seq.iter Console.WriteLine
 
-
-    
-
 // Some common ones
-let CoreLibTypeMappings =
+let SupportedCoreLibTypes =
     [|
         "System.Int32", (Simple Integer)
         "System.String", (Simple (Text None))
@@ -30,23 +27,31 @@ let CoreLibTypeMappings =
     |]
 
 let (|HasCoreLibType|_|) (s:string) =  
-    CoreLibTypeMappings
+    SupportedCoreLibTypes
     |> Array.tryFind (fun (name,rep) -> name = s)
     |> Option.map snd
 
 
-let CustomTypeMappings =
-    [|
-        "Fable.JsonProvider.Generator<...>", (Simple JsonToken)
-    |]
-
-let (|HasCustomType|_|) (s:string) =  
-    CustomTypeMappings
-    |> Array.tryFind (fun (name,rep) -> name = s)
+let (|HasSupportedCoreLibType|_|) (s:FSharpType) =  
+    let fullname = s.TypeDefinition.FullName
+    SupportedCoreLibTypes
+    |> Array.tryFind (fun (name,rep) -> name = fullname)
     |> Option.map snd
-    
-    
-    
+
+
+//
+//let CustomTypeMappings =
+//    [|
+//        "Fable.JsonProvider.Generator<...>", (Simple JsonToken)
+//    |]
+//
+//let (|HasCustomType|_|) (s:string) =  
+//    CustomTypeMappings
+//    |> Array.tryFind (fun (name,rep) -> name = s)
+//    |> Option.map snd
+//    
+//    
+//    
 
 
 

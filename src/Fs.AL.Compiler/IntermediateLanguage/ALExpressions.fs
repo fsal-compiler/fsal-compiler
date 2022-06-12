@@ -197,7 +197,7 @@ module ALExpressionTranslation =
                             )
 //                        let rr = argExprs[0] |> ALExpression.ofFSharpExpr b
                         let v1 = 5
-                        LetExprKind.Normal,xprt 
+                        LetExprKind.Override, xprt 
                     | _ ->   
                         let test1 = 1
 //                        let (FSharpExprPatterns.Coerce(c) ) = argExprs[0]
@@ -464,6 +464,33 @@ module ALExpressionTranslation =
             
         | _ -> failwith "invalid expression"
         
+    let translatePropertySet b (objexpr:FSharpExpr option) (memberOrFunc:FSharpMemberOrFunctionOrValue) (argExprs:FSharpExpr list) : ALExpression =
+        let v = 1
+        let prop =
+            memberOrFunc.DisplayName
+            |> (fun f -> f.Replace("`",""))
+            |> (fun f -> if f.StartsWith ("set_") then f[4..] else f)
+        let assignTo =
+            if ALExpression.isThis objexpr.Value
+            then Identifier prop
+            else
+                let tgt = objexpr.Value |> ALExpression.ofFSharpExpr b
+                ALExpression.createMemberAccess tgt prop
+            
+        let newval = (argExprs[0] |> ALExpression.ofFSharpExpr b)
+        match newval with
+        | FSALExpr (StatementExpr alStatement) ->
+            let v = 1
+            let prec,last = alStatement |> ALStatement.unwrapStatement []
+            let statementblock =
+                Block (prec @[
+                    Assignment(assignTo,last |> ALExpression.ofALStatement)
+                ])
+            statementblock |> ALExpression.fromALStatement 
+        | _ ->             
+            let stat = Assignment(assignTo,newval)
+            stat |> ALExpression.fromALStatement 
+        
 let (|HasALFunctionReplacement|_|) (b:ALProcedureContext) (s:string) : (ALFunctionReplacementArgs -> ALExpression) option =
     match b.registeredReplacements.TryGetValue(s) with
     | true, v -> Some v.Replacement
@@ -518,6 +545,7 @@ module ALExpression =
         Logger.logDebug $"fsharpexpr: %s{FSExpr.getPatternName exp}"
         
         match exp with
+        | FSharpExprPatterns.AddressOf(lvalueExpr) -> lvalueExpr |> ALExpression.ofFSharpExpr b
         | FSharpExprPatterns.DecisionTreeSuccess (decisionTargetIdx, decisionTargetExprs) ->
             let result = ALExpressionTranslation.translateDecisionTreeSuccess b exp
             result 
@@ -543,21 +571,12 @@ module ALExpression =
             
         | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, argExprs) ->
             let sym_memberOrFunc = memberOrFunc :> FSharpSymbol
+            if memberOrFunc.ApparentEnclosingEntity.IsFSharpRecord && memberOrFunc.IsImplicitConstructor then
+                let t = 1
+                failwith "test"
+            else
             if memberOrFunc.IsPropertySetterMethod || memberOrFunc.IsImplicitConstructor then
-                let prop =
-                    memberOrFunc.DisplayName
-                    |> (fun f -> f.Replace("`",""))
-                    |> (fun f -> if f.StartsWith ("set_") then f[4..] else f)
-                let assignTo =
-                    if ALExpression.isThis objExprOpt.Value
-                    then Identifier prop
-                    else
-                        let tgt = objExprOpt.Value |> ALExpression.ofFSharpExpr b
-                        ALExpression.createMemberAccess tgt prop
-                    
-                let newval = (argExprs[0] |> ALExpression.ofFSharpExpr b)
-                let stat = Assignment(assignTo,newval)
-                stat |> ALExpression.fromALStatement 
+                ALExpressionTranslation.translatePropertySet b objExprOpt memberOrFunc argExprs
             else
                 
                 let replacementargs =
@@ -691,15 +710,14 @@ module ALExpression =
                         | _ -> 
                             FSALExpr Ignore
                     // AL Static method
-                    | x when
-                            objExprOpt.IsNone
-                          &&
-                            (memberOrFunc.ApparentEnclosingEntity |> FSharpEntity.isALObject
-                          || memberOrFunc.ApparentEnclosingEntity.IsFSharpModule)
+                    | x when memberOrFunc.ApparentEnclosingEntity |> FSharpEntity.tryGetALObjectKind |> Option.isSome
+//                          &&
+//                            (memberOrFunc.ApparentEnclosingEntity |> FSharpEntity.isALObject
+//                          || memberOrFunc.ApparentEnclosingEntity.IsFSharpModule)
                         ->
                     
                         let ent = memberOrFunc.ApparentEnclosingEntity
-                        let isSingleInstCodeunit = ent |> FSharpEntity.hasAttribute<ALSingleInstanceCodeunit>
+                        let isSingleInstCodeunit = ent |> FSharpEntity.hasAttribute<AL.Codeunit>
                         let isStaticReference = 
                             if isSingleInstCodeunit
                             then Some (ALType.Complex (Codeunit ent.DisplayName))
@@ -853,6 +871,16 @@ module ALExpression =
                                         "Add"
                                         [ ALExpression.createJsonCastExpr "_jtoken" genType.Value ] 
                                 )
+                            | n ->
+                                let genfstype = genericType |> ALType.ofFSharpType
+                                let v1 = 1
+                                match genfstype with
+                                | Simple JsonToken ->
+                                    Assignment(
+                                        Identifier letBindVar.DisplayName,
+                                        JsonTokens.getJsonCastExpr (Identifier letBindVarJsonName) (letBindVar.FullType)
+                                    )
+                                | _ -> failwith "test"
                             | n -> failwithf $"list of %A{n} not implemented"
                     Sequence (memberAccess,assignmentExpr) |> ALExpression.fromALStatement
                 | _ ->

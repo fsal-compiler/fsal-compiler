@@ -158,21 +158,21 @@ type ALFile() =
 
     member this.Copy (fromFileName:string,toFileName:string) : bool = failwith "todo" 
 
-    member this.UploadIntoStream (fromTypeFilter:string,navInStream:ref<Stream>,automationId:Guid) : bool = failwith "todo" 
+    member this.UploadIntoStream (fromTypeFilter:string,navInStream:byref<Stream>,automationId:Guid) : bool = failwith "todo" 
 
-    member this.UploadIntoStream (dialogTitle:string,fromInitialFolder:string,fromTypeFilter:string,fromFileName:ref<string>,navInStream:ref<Stream>,automationId:Guid) : bool = failwith "todo" 
+    member this.UploadIntoStream (dialogTitle:string,fromInitialFolder:string,fromTypeFilter:string,fromFileName:byref<string>,navInStream:byref<Stream>,automationId:Guid) : bool = failwith "todo" 
 
-    member this.Upload (dialogTitle:string,fromInitialFolder:string,fromTypeFilter:string,fromFileName:string,toFileName:ref<string>,automationId:Guid) : bool = failwith "todo" 
+    member this.Upload (dialogTitle:string,fromInitialFolder:string,fromTypeFilter:string,fromFileName:string,toFileName:byref<string>,automationId:Guid) : bool = failwith "todo" 
 
-    member this.DownloadFromStream (source:Stream,dialogTitle:string,toInitialFolder:string,toTypeFilter:string,toFileName:ref<string>,automationId:Guid) : bool = failwith "todo" 
+    member this.DownloadFromStream (source:Stream,dialogTitle:string,toInitialFolder:string,toTypeFilter:string,toFileName:byref<string>,automationId:Guid) : bool = failwith "todo" 
 
-    member this.Download (fromFileName:string,dialogTitle:string,toInitialFolder:string,toTypeFilter:string,toFileName:ref<string>,automationId:Guid) : bool = failwith "todo" 
+    member this.Download (fromFileName:string,dialogTitle:string,toInitialFolder:string,toTypeFilter:string,toFileName:byref<string>,automationId:Guid) : bool = failwith "todo" 
 
     member this.Exists (fileName:string) : bool = failwith "todo" 
 
-    member this.GetStamp (fileName:string,date:ref<DateOnly>) : bool = failwith "todo" 
+    member this.GetStamp (fileName:string,date:byref<DateOnly>) : bool = failwith "todo" 
 
-    member this.GetStamp (fileName:string,date:ref<DateOnly>,time:ref<TimeOnly>) : bool = failwith "todo" 
+    member this.GetStamp (fileName:string,date:byref<DateOnly>,time:byref<TimeOnly>) : bool = failwith "todo" 
 
     member this.SetStamp (fileName:string,date:DateOnly) : bool = failwith "todo" 
 

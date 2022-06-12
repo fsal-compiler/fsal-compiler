@@ -1,6 +1,7 @@
 ﻿[<Microsoft.FSharp.Core.AutoOpen>]
 module Fs.AL.Compiler.IntermediateLanguage.ALTypeMapping
 
+open System
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerSymbols
 
@@ -9,20 +10,34 @@ open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
 open Fs.AL.Compiler.Fullname
 
+let private (|HasALType|_|) (s:FSharpType) =
+    match s.TypeDefinition |> FSharpEntity.tryGetALObjectKind with
+    | Some alType -> alType |> Some
+    | None -> None
+
 module ALType =
     type private t = Fs.AL.Core.ALCoreValues.ALType
     
     let rec ofFSharpType (ftype:FSharpType) =
         let rootType = ftype |> FSharpType.getRootType
         let fullname = rootType |> FSharpType.getFullName
+        
+        match rootType with
+        | HasALType alType -> alType
+        | ALTypeReplacements.HasSupportedCoreLibType alType -> alType  
+        | _ -> 
+        
+        let debug = 1
+        
         match fullname with
         | Operators.ref -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.byref" -> ftype.GenericArguments[0] |> ofFSharpType
+        | "Microsoft.FSharp.Core.Ref" -> ftype.GenericArguments[0] |> ofFSharpType
         // array types
         | "Microsoft.FSharp.Core.[]" ->
             let arrayof = ftype.GenericArguments[0] |> ofFSharpType
             match arrayof with
-            | Simple (SimpleType "JsonToken") -> Simple (SimpleType "JsonArray")
+            | Simple JsonToken -> Simple JsonArray
             | Simple (Char) -> Simple (ALSimpleType.List (ALSimpleType.Char))
             | Simple (Integer) -> Simple (ALSimpleType.List (ALSimpleType.Integer))
             | Simple (Decimal) -> Simple (ALSimpleType.List (ALSimpleType.Decimal))
@@ -31,14 +46,14 @@ module ALType =
         | "System.Collections.Generic.List" ->
             let listof = ftype.GenericArguments[0] |> ofFSharpType
             match listof with
-            | Simple (SimpleType "JsonToken") -> Simple (SimpleType "JsonArray")
+            | Simple JsonToken -> Simple JsonArray
             | Simple (st) -> Simple (List st)
             | x -> failwith $"invalid AL list, use an array? %A{x}"
         | "System.Collections.Generic.List`1.Enumerator" ->
             // todo: create seq type
             let listof = ftype.GenericArguments[0] |> ofFSharpType
             match listof with
-            | Simple (SimpleType "JsonToken") -> Simple (SimpleType "JsonArray")
+            | Simple JsonToken -> Simple JsonArray
             | Simple (st) -> Simple (List st)
             | x -> failwith $"invalid AL list, use an array? %A{x}"
         // types inherited from type system
@@ -52,34 +67,24 @@ module ALType =
             Complex (Record name)
         | x when ftype |> FSharpType.hasBaseType<ALSimpleValue> -> Simple (SimpleType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
         | x when ftype |> FSharpType.hasBaseType<ALComplexValue> -> Complex (ComplexType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
-        | x when ftype.TypeDefinition |> FSharpEntity.hasAttribute<ALJson> -> Simple (SimpleType "JsonToken") // use as json type
+        | x when ftype.TypeDefinition |> FSharpEntity.hasAttribute<ALJson> -> Simple JsonToken // use as json type
         // todo: handle union type fields too
         | x when ftype.TypeDefinition.IsFSharpUnion ->
             let unioncase = ftype.TypeDefinition.UnionCases
-            Simple (SimpleType "JsonToken") // use as json type
+            Simple JsonToken // use as json type
         // System.** namespace types
         | ALTypeReplacements.HasCoreLibType mapping -> mapping
         // jsonprovider types
-        | x when x.StartsWith "Fable.JsonProvider.Generator<...>" -> Simple (SimpleType "JsonToken")
-        // edge cases, lambdas, typeprovider types
-        | x when x.StartsWith("+++") ->
-            if x.StartsWith("+++JsonProvider:") then Simple (SimpleType "JsonToken")
-            elif x.StartsWith("+++Lambda") then
-                match ftype.GenericArguments |> Seq.toList with
-                | [ a1; a2 ] -> // a1 unit, a2 return type
-                    //let td = a2.TypeDefinition |> FSharpEntity.getALObjectKind
-                    failwithf $"%A{a2}"
-                | _ -> 
-                    let debug = 5
-                    failwithf $"%A{debug}"
-                    Simple (SimpleType "FUNCTION") //TODO:
-            else failwith $"unhandled typeprovider {x}"
-        | x when ftype.BaseType.Value.TypeDefinition.FullName = FSharpType.ALTypeFullNames.record ->
-            let roottype = ftype.TypeDefinition |> FSharpEntity.getRootEntity
-            let name = ftype.TypeDefinition.DisplayName
-            Complex (Record (roottype |> FSharpEntity.getALCompiledName))
+        | x when x.StartsWith "Fable.JsonProvider.Generator<...>" -> Simple JsonToken
+        | x ->
+            raise (NotImplementedException(x))
+        
+//        | x when ftype.BaseType.Value.TypeDefinition.FullName = FSharpType.ALTypeFullNames.record ->
+//            let roottype = ftype.TypeDefinition |> FSharpEntity.getRootEntity
+//            let name = ftype.TypeDefinition.DisplayName
+//            Complex (Record (roottype |> FSharpEntity.getALCompiledName))
         // just for debugging
-        | x -> failwith $"unsupported type {x}"
+//        | x -> failwith $"unsupported type {x}"
         
             
     let isRef (fst:FSharpType) = fst.TypeDefinition |> FSharpType.isRefType

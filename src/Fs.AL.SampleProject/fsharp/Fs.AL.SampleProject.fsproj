@@ -8,6 +8,7 @@
     <ItemGroup>
         <Compile Include="RecordTest01SimpleRecord.fs" />
         <Compile Include="RecordTest02Inheritance.fs" />
+        <Compile Include="RecordTest03FSharpRecords.fs" />
         <Compile Include="CodeunitTest01Simple.fs" />
         <Compile Include="CodeunitTest02Control.fs" />
         <Compile Include="CodeunitTest03Constructors.fs" />

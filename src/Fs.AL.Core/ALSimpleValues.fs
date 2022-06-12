@@ -39,17 +39,17 @@ type ALBigText() =
 
     member this.AddText (bigText:ALBigText,variable:string,toPos1Based:int) : ALBigText = failwith "todo" 
 
-    member this.GetSubText (variable:ref<string>,fromPos1Based:int) : int = failwith "todo" 
+    member this.GetSubText (variable:byref<string>,fromPos1Based:int) : int = failwith "todo" 
 
-    member this.GetSubText (variable:ref<string>,fromPos1Based:int,length:int) : int = failwith "todo" 
+    member this.GetSubText (variable:byref<string>,fromPos1Based:int,length:int) : int = failwith "todo" 
 
-    member this.GetSubText (variable:ref<ALBigText>,fromPos1Based:int) : int = failwith "todo" 
+    member this.GetSubText (variable:byref<ALBigText>,fromPos1Based:int) : int = failwith "todo" 
 
-    member this.GetSubText (variable:ref<ALBigText>,fromPos1Based:int,length:int) : int = failwith "todo" 
+    member this.GetSubText (variable:byref<ALBigText>,fromPos1Based:int,length:int) : int = failwith "todo" 
 
     member this.TextPos (substring:string) : int = failwith "todo" 
 
-    member this.Read (text:ref<ALBigText>,inStream:Stream) : bool = failwith "todo" 
+    member this.Read (text:byref<ALBigText>,inStream:Stream) : bool = failwith "todo" 
 
     member this.Write (outStream:Stream) : bool = failwith "todo" 
 
@@ -132,7 +132,7 @@ type ALJsonArray() =
 
     member this.RemoveAll ()  : unit = failwith "todo" 
 
-    member this.Get (index:int,result:ref<ALJsonToken>) : bool = failwith "todo" 
+    member this.Get (index:int,result:byref<ALJsonToken>) : bool = failwith "todo" 
 
     member this.Set (index:int,value:ALJsonToken) : bool = failwith "todo" 
 
@@ -144,13 +144,13 @@ type ALJsonArray() =
 
     member this.ReadFrom (data:Stream) : bool = failwith "todo" 
 
-    member this.WriteTo (data:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (data:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (data:Stream) : bool = failwith "todo" 
 
-    member this.SelectToken (path:string,result:ref<ALJsonToken>) : bool = failwith "todo" 
+    member this.SelectToken (path:string,result:byref<ALJsonToken>) : bool = failwith "todo" 
 
-    member this.SelectTokens (path:string,result:ref<ResizeArray<'t>>) : bool = failwith "todo" 
+    member this.SelectTokens (path:string,result:byref<ResizeArray<'t>>) : bool = failwith "todo" 
 
     member this.AsArray ()  : ALJsonArray = failwith "todo" 
 
@@ -183,7 +183,7 @@ type ALJsonObject() =
 
     member this.Contains (key:string) : bool = failwith "todo" 
 
-    member this.Get (key:string,value:ref<ALJsonToken>) : bool = failwith "todo" 
+    member this.Get (key:string,value:byref<ALJsonToken>) : bool = failwith "todo" 
 
     member this.Add (key:string,value:ALJsonToken) : bool = failwith "todo" 
 
@@ -199,13 +199,13 @@ type ALJsonObject() =
 
     member this.ReadFrom (data:Stream) : bool = failwith "todo" 
 
-    member this.WriteTo (data:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (data:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (data:Stream) : bool = failwith "todo" 
 
-    member this.SelectToken (path:string,result:ref<ALJsonToken>) : bool = failwith "todo" 
+    member this.SelectToken (path:string,result:byref<ALJsonToken>) : bool = failwith "todo" 
 
-    member this.SelectTokens (path:string,result:ref<ResizeArray<'t>>) : bool = failwith "todo" 
+    member this.SelectTokens (path:string,result:byref<ResizeArray<'t>>) : bool = failwith "todo" 
 
     member this.AsArray ()  : ALJsonArray = failwith "todo" 
 
@@ -240,13 +240,13 @@ type ALJsonToken() =
 
     member this.ReadFrom (data:Stream) : bool = failwith "todo" 
 
-    member this.WriteTo (data:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (data:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (data:Stream) : bool = failwith "todo" 
 
-    member this.SelectToken (path:string,result:ref<ALJsonToken>) : bool = failwith "todo" 
+    member this.SelectToken (path:string,result:byref<ALJsonToken>) : bool = failwith "todo" 
 
-    member this.SelectTokens (path:string,result:ref<ResizeArray<'t>>) : bool = failwith "todo" 
+    member this.SelectTokens (path:string,result:byref<ResizeArray<'t>>) : bool = failwith "todo" 
 
     member this.AsArray ()  : ALJsonArray = failwith "todo" 
 
@@ -325,13 +325,13 @@ type ALJsonValue() =
 
     member this.ReadFrom (data:Stream) : bool = failwith "todo" 
 
-    member this.WriteTo (data:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (data:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (data:Stream) : bool = failwith "todo" 
 
-    member this.SelectToken (path:string,result:ref<ALJsonToken>) : bool = failwith "todo" 
+    member this.SelectToken (path:string,result:byref<ALJsonToken>) : bool = failwith "todo" 
 
-    member this.SelectTokens (path:string,result:ref<ResizeArray<'t>>) : bool = failwith "todo" 
+    member this.SelectTokens (path:string,result:byref<ResizeArray<'t>>) : bool = failwith "todo" 
 
     member this.AsArray ()  : ALJsonArray = failwith "todo" 
 
@@ -604,23 +604,23 @@ type ALXmlAttribute() =
 
     member this.CreateNamespaceDeclaration (prefix:string,namespaceUri:string) : ALXmlAttribute = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -683,11 +683,11 @@ type ALXmlAttribute() =
 type ALXmlAttributeCollection() =
     inherit ALSimpleValue()
 
-    member this.Get (index:int,result:ref<ALXmlAttribute>) : bool = failwith "todo" 
+    member this.Get (index:int,result:byref<ALXmlAttribute>) : bool = failwith "todo" 
 
-    member this.Get (name:string,result:ref<ALXmlAttribute>) : bool = failwith "todo" 
+    member this.Get (name:string,result:byref<ALXmlAttribute>) : bool = failwith "todo" 
 
-    member this.Get (localName:string,namespaceUri:string,result:ref<ALXmlAttribute>) : bool = failwith "todo" 
+    member this.Get (localName:string,namespaceUri:string,result:byref<ALXmlAttribute>) : bool = failwith "todo" 
 
     member this.RemoveAll ()  : unit = failwith "todo" 
 
@@ -710,23 +710,23 @@ type ALXmlCData() =
 
     member this.Create (value:string) : ALXmlCData = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -781,23 +781,23 @@ type ALXmlComment() =
 
     member this.Create (value:string) : ALXmlComment = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -852,23 +852,23 @@ type ALXmlDeclaration() =
 
     member this.Create (version:string,encoding:string,standalone:string) : ALXmlDeclaration = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -927,21 +927,21 @@ type ALXmlDocument() =
 
     static member Create ()  : ALXmlDocument = failwith "todo" 
 
-    static member ReadFrom (data:string,result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    static member ReadFrom (data:string,result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
-    static member ReadFrom (data:Stream,result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    static member ReadFrom (data:Stream,result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
-    static member ReadFrom (data:string,readOptions:ALXmlReadOptions,result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    static member ReadFrom (data:string,readOptions:ALXmlReadOptions,result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
-    static member ReadFrom (data:Stream,readOptions:ALXmlReadOptions,result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    static member ReadFrom (data:Stream,readOptions:ALXmlReadOptions,result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
-    member this.GetRoot (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetRoot (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDeclaration (result:ref<ALXmlDeclaration>) : bool = failwith "todo" 
+    member this.GetDeclaration (result:byref<ALXmlDeclaration>) : bool = failwith "todo" 
 
     member this.SetDeclaration (declaration:ALXmlDeclaration) : bool = failwith "todo" 
 
-    member this.GetDocumentType (result:ref<ALXmlDocumentType>) : bool = failwith "todo" 
+    member this.GetDocumentType (result:byref<ALXmlDocumentType>) : bool = failwith "todo" 
 
     member this.RemoveNodes ()  : unit = failwith "todo" 
 
@@ -961,23 +961,23 @@ type ALXmlDocument() =
 
     member this.GetDescendantElements (localName:string,namespaceUri:string) : ALXmlNodeList = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -1038,39 +1038,39 @@ type ALXmlDocumentType() =
 
     member this.Create (name:string,publicId:string,systemId:string,internalSubset:string) : ALXmlDocumentType = failwith "todo" 
 
-    member this.GetName (result:ref<string>) : bool = failwith "todo" 
+    member this.GetName (result:byref<string>) : bool = failwith "todo" 
 
     member this.SetName (value:string) : bool = failwith "todo" 
 
-    member this.GetSystemId (result:ref<string>) : bool = failwith "todo" 
+    member this.GetSystemId (result:byref<string>) : bool = failwith "todo" 
 
     member this.SetSystemId (value:string) : bool = failwith "todo" 
 
-    member this.GetInternalSubset (result:ref<string>) : bool = failwith "todo" 
+    member this.GetInternalSubset (result:byref<string>) : bool = failwith "todo" 
 
     member this.SetInternalSubset (value:string) : bool = failwith "todo" 
 
-    member this.GetPublicId (result:ref<string>) : bool = failwith "todo" 
+    member this.GetPublicId (result:byref<string>) : bool = failwith "todo" 
 
     member this.SetPublicId (value:string) : bool = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -1125,9 +1125,9 @@ type ALXmlElement() =
 
     member this.Create (localName:string,namespaceUri:string) : ALXmlElement = failwith "todo" 
 
-    member this.GetNamespaceOfPrefix (prefix:string,result:ref<string>) : bool = failwith "todo" 
+    member this.GetNamespaceOfPrefix (prefix:string,result:byref<string>) : bool = failwith "todo" 
 
-    member this.GetPrefixOfNamespace (ns:string,result:ref<string>) : bool = failwith "todo" 
+    member this.GetPrefixOfNamespace (ns:string,result:byref<string>) : bool = failwith "todo" 
 
     member this.RemoveAllAttributes ()  : unit = failwith "todo" 
 
@@ -1161,23 +1161,23 @@ type ALXmlElement() =
 
     member this.GetDescendantElements (localName:string,namespaceUri:string) : ALXmlNodeList = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -1248,9 +1248,9 @@ type ALXmlNamespaceManager() =
 
     member this.HasNamespace (prefix:string) : bool = failwith "todo" 
 
-    member this.LookupNamespace (prefix:string,result:ref<string>) : bool = failwith "todo" 
+    member this.LookupNamespace (prefix:string,result:byref<string>) : bool = failwith "todo" 
 
-    member this.LookupPrefix (uri:string,result:ref<string>) : bool = failwith "todo" 
+    member this.LookupPrefix (uri:string,result:byref<string>) : bool = failwith "todo" 
 
     member this.RemoveNamespace (prefix:string,uri:string) : unit = failwith "todo" 
 
@@ -1267,30 +1267,30 @@ type ALXmlNameTable() =
 
     member this.Add (key:string) : string = failwith "todo" 
 
-    member this.Get (key:string,result:ref<string>) : bool = failwith "todo" 
+    member this.Get (key:string,result:byref<string>) : bool = failwith "todo" 
 
 
 [<CompiledName("XmlNode")>]
 type ALXmlNode() =
     inherit ALSimpleValue()
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -1341,7 +1341,7 @@ type ALXmlNode() =
 type ALXmlNodeList() =
     inherit ALSimpleValue()
 
-    member this.Get (index:int,node:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.Get (index:int,node:byref<ALXmlNode>) : bool = failwith "todo" 
 
     member this.Count : int = failwith "todo" 
 
@@ -1352,31 +1352,31 @@ type ALXmlProcessingInstruction() =
 
     member this.Create (target:string,data:string) : ALXmlProcessingInstruction = failwith "todo" 
 
-    member this.GetData (result:ref<string>) : bool = failwith "todo" 
+    member this.GetData (result:byref<string>) : bool = failwith "todo" 
 
     member this.SetData (value:string) : bool = failwith "todo" 
 
-    member this.GetTarget (result:ref<string>) : bool = failwith "todo" 
+    member this.GetTarget (result:byref<string>) : bool = failwith "todo" 
 
     member this.SetTarget (value:string) : bool = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 
@@ -1435,23 +1435,23 @@ type ALXmlText() =
 
     member this.Create (value:string) : ALXmlText = failwith "todo" 
 
-    member this.GetParent (result:ref<ALXmlElement>) : bool = failwith "todo" 
+    member this.GetParent (result:byref<ALXmlElement>) : bool = failwith "todo" 
 
-    member this.GetDocument (result:ref<ALXmlDocument>) : bool = failwith "todo" 
+    member this.GetDocument (result:byref<ALXmlDocument>) : bool = failwith "todo" 
 
     member this.Remove ()  : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNode>) : bool = failwith "todo" 
+    member this.SelectSingleNode (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNode>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:ref<ALXmlNodeList>) : bool = failwith "todo" 
+    member this.SelectNodes (xpath:string,namespaceManager:ALXmlNamespaceManager,result:byref<ALXmlNodeList>) : bool = failwith "todo" 
 
-    member this.WriteTo (result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (result:byref<string>) : bool = failwith "todo" 
 
-    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:ref<string>) : bool = failwith "todo" 
+    member this.WriteTo (writeOptions:ALXmlWriteOptions,result:byref<string>) : bool = failwith "todo" 
 
     member this.WriteTo (writeOptions:ALXmlWriteOptions,result:Stream) : bool = failwith "todo" 
 

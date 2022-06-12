@@ -5,6 +5,7 @@ open System
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.Fullname
+open Fs.AL.Compiler.IntermediateLanguage
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.ALSimpleValues
@@ -15,15 +16,42 @@ let GetArray =
         member this.FunctionName = "Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray"
         member this.Replacement =
             (fun rargs ->
+                
+                
+                
                 match rargs.argExprs[0],rargs.argExprs[1] with
                 | FSharpExprPatterns.Value(v), get_idx ->
-                    let vtype = v.FullType |> FSharpType.tryGetGenericTypeArg |> Option.map (FSharpType.getRootType >> FSharpType.getFullName)
-                    match vtype with
+                    let vtype = v.FullType |> FSharpType.tryGetGenericTypeArg |> Option.map (FSharpType.getRootType)
+                    let vtypefullname =  vtype |> Option.map FSharpType.getFullName
+                    match vtypefullname with
                     | Some Types.String | Some Types.Double | Some Types.Int32 ->
                         let onebasedIndex = get_idx |> rargs.toAL |> ALExpression.convertTo1BasedIndex 
                         let idf = ALExpression.createIdentifer v
                         ALExpression.createMemberAccessInvocation idf "Get" [onebasedIndex]
-                    | t -> raise (NotImplementedException($"Get Index for type {t} not implemented"))
+                    | Some t ->
+                        let genfstype = vtype.Value |> ALType.ofFSharpType
+                        let v1 = 1
+                        match genfstype with
+                        | Simple JsonToken ->
+                            let idf = ALExpression.createIdentifer v
+                            let zerobasedIndex = get_idx |> rargs.toAL
+                            
+                            match ALExprContext.getLetBindingCtx rargs.context with
+                            | None -> raise (NotImplementedException()) 
+                            | Some (assignTo,LetExprKind.TypeProvider _) ->
+                                let v = 1
+                                let assignToIdentifer = ALExpression.createIdentifer assignTo
+                                let statements =
+                                    [
+                                        ALExpression.createMemberAccessInvocation idf "Get" [zerobasedIndex ; Identifier "_jtoken"]  |> ALStatement.ofExpression
+                                        Assignment (assignToIdentifer,(Identifier "_jtoken"))
+                                    ]
+                                ALStatement.sequenceOf statements |> ALExpression.fromALStatement
+                                
+                            | _ -> raise (NotImplementedException($"Get Index for type {t} not implemented"))
+                        | _ -> raise (NotImplementedException($"Get Index for type {t} not implemented"))
+                    | t -> 
+                        raise (NotImplementedException($"Get Index for type {t} not implemented"))
                     
                 | FSharpExprPatterns.Coerce(targetType, inpExpr), FSharpExprPatterns.Const(idx,_) ->
                     let vtx = 1

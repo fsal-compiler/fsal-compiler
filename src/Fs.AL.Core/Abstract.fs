@@ -3,6 +3,8 @@
 open System
 open System.Runtime.InteropServices
 
+
+
 [<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]
 type ALJson() = 
     inherit System.Attribute()
@@ -13,18 +15,22 @@ type ALName(str:string) =
     member this.Name : string = str
 
 
-[<AbstractClass>]
-type ALSingleInstanceCodeunit(id:int) =
-    inherit System.Attribute()
-    member this.ObjectId : int = id
 
-//type BcValueAttribute(bcName:string) = 
-//    inherit System.Attribute()
-//    member this.BcName : string = bcName
+/// AL representations of types
+[<RequireQualifiedAccess>]
+module AL = 
+    
+    /// single-instance codeunit for modules
+    type Codeunit(id:int) =
+        inherit System.Attribute()
+        member this.ObjectId : int = id
+        
+    /// table for f# record types
+    [<AttributeUsage(AttributeTargets.All,Inherited=true,AllowMultiple=false)>]        
+    type Table(id:int) =
+        inherit System.Attribute()
+        member this.ObjectId : int = id
 
-//type BcComplexValueAttribute(bcName:string) = 
-//    inherit System.Attribute()
-//    member this.BcName : string = bcName
 
 [<AbstractClass>]
 type ALSimpleValue() = do ()

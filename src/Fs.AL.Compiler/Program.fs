@@ -12,7 +12,8 @@ open Fs.AL.Compiler.IntermediateLanguage
 open Microsoft.FSharp.Core
 
 #if DEBUG
-Directory.SetCurrentDirectory(__SOURCE_DIRECTORY__ + @"./../Fs.AL.SampleProject/")
+//Directory.SetCurrentDirectory(__SOURCE_DIRECTORY__ + @"./../Fs.AL.SampleProject/")
+//Directory.SetCurrentDirectory(@"C:\Users\kast\source\publicrepos\fsal-maaamet")
 #endif
 
 let settings =
@@ -63,8 +64,9 @@ let v2 = 1
      
         
 let compilerCtx =
-    let builders = fsharpImplementations |> Seq.where (fun (f,mem) -> not f.IsAbstractClass)     
-    let abstractClasses = fsharpImplementations |> Seq.where (fun (f,mem) -> f.IsAbstractClass)  |> Seq.map ALObjectBuilder.ofEntityWithMembers |> Seq.toArray
+    let builders = fsharpImplementations |> Seq.where (fun impl -> not impl.entity.IsAbstractClass)     
+    let abstractClasses = fsharpImplementations |> Seq.where (fun impl -> impl.entity.IsAbstractClass) |> Seq.map ALObjectBuilder.ofEntityWithMembers |> Seq.toArray
+    let v = 1
     {
         builders =
             builders

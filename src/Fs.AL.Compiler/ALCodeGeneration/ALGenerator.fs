@@ -396,6 +396,11 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
             | Expression (Constant o) ->
                 let statement = GenALStatement.createAssignment level (alExpression,Constant o)
                 buildStatements level (statement::acc) tail
+            | Sequence(curr, next) ->
+                let exp = ALExpression.ofALStatement next
+                let precedingStatement = GenALStatement.ofALStatement level curr
+                let statement = GenALStatement.createAssignment level (alExpression,exp)
+                buildStatements level (statement::precedingStatement::acc) tail
             | _ -> failwith "unhandled case"
             
         | Assignment(alExpression, expression) ->
@@ -510,8 +515,9 @@ module Members =
 module Objects =
     let createALCodeunit (builder:ALObjectBuilder) =
         
+        let test = 1
         let props =
-            match builder.fsharpEntity.TryGetAttribute<ALSingleInstanceCodeunit>() with
+            match builder.fsharpEntity.TryGetAttribute<AL.Codeunit>() with
             | Some attr ->
                 let pv =
                     sf.PropertyLiteral(PropertyKind.SingleInstance,true).WithLeadingTrivia(Trivia.lf4spaces)
@@ -567,8 +573,9 @@ module Objects =
         ()
 
 let createALObject (builder:ALObjectBuilder) =
-    let alType = builder.fsharpEntity |> FSharpEntity.getALObjectKind
-    match alType with
+    let alType = builder.fsharpEntity |> FSharpEntity.tryGetALObjectKind
+    if alType.IsNone then failwith "not an AL object"
+    match alType.Value with
     | ALType.Complex
         (ALComplexType.Codeunit name) -> Objects.createALCodeunit builder 
     | ALType.Complex

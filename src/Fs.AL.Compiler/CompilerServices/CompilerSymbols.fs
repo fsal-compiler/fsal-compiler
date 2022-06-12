@@ -145,7 +145,8 @@ module FSharpType =
 #if DEBUG
         match t with
         | "Microsoft.FSharp.Core.[]" -> () 
-        | "Microsoft.FSharp.Core.Unit" -> () 
+        | "Microsoft.FSharp.Core.Unit" -> ()
+        | "Microsoft.FSharp.Core.Ref" -> () 
         | _ when t.StartsWith("Microsoft.FSharp") ->  failwith $"invalid type {t}"
         | _ -> ()
 #endif
@@ -196,46 +197,53 @@ module FSharpEntity =
             |> Option.bind (fun f -> f.FullTypeSafe )
             |> Option.map (fun f -> f.GenericArguments[1] )
         ctor
-//    let isALType (x:t) =
+        
+//    let isALObject (x:t) =
 //        match x.BaseType with
 //        | None -> false
 //        | Some basetype ->
-//            basetype |> FSharpType.isOfType<ALComplexValue>
-//            || basetype |> FSharpType.isOfType<ALObject>
-//            || basetype |> FSharpType.isOfType<ALCodeunit>
-//            
-    let hasALType (x:FSharpType option) =
-        match x with
-        | None -> false
-        | Some basetype ->
-            basetype |> FSharpType.isOfType<ALComplexValue>
-            || basetype |> FSharpType.isOfType<ALObject>
-            || basetype |> FSharpType.isOfType<ALCodeunit>
-            || basetype |> FSharpType.isOfType<ALCodeunit>
-       
-    let isALObject (x:t) =
-        match x.BaseType with
-        | None -> false
-        | Some basetype ->
-            basetype |> FSharpType.isOfType<ALCodeunit>
-            || basetype |> FSharpType.isOfType<ALRecord>
-            
-            
-    let getALObjectKind (x:t) =
-        match x.TryGetAttribute<ALSingleInstanceCodeunit>() with
-        | Some attr -> Complex (Codeunit x.DisplayName)
-        | _ -> 
-        let name = x |> FSharpEntity.getALCompiledName
-        let rec loop typ = 
+//            basetype |> FSharpType.isOfType<ALCodeunit>
+//            || basetype |> FSharpType.isOfType<ALRecord>
+          
+    /// strongly typed comparison to runtime
+    let isOfType (typ:Type) (x:t) =
+        let symbolfullname = x :> FSharpSymbol |> (fun f -> f.FullName)
+        let typefullname = typ.FullName.Replace("+",".")
+        symbolfullname = typefullname
+           
+    let tryGetALObjectKind (x:t) =
+        let alAttributes =
+            x.Attributes
+            |> Seq.where (fun f -> f.AttributeType.AccessPath = "Fs.AL.Core.Abstract.AL")
+            |> Seq.toList
+        let v = 1
+        let compiledName = x |> getALCompiledName
+        
+        let rec resolveALType (attrs:FSharpAttribute list) =
+            match attrs with
+            | [] -> None
+            | head :: tail ->
+                if head.AttributeType |> FSharpEntity.isOfType typeof<AL.Codeunit>
+                then Complex (Codeunit x.DisplayName) |> Some
+                elif head.AttributeType |> FSharpEntity.isOfType typeof<AL.Table>
+                then Complex (Record x.DisplayName) |> Some
+                else resolveALType tail
+        
+        let rec basetypeloop typ = 
             match typ with
-            | None -> failwithf $"%A{x} is not an AL Object"
+            | None -> None
             | Some basetype ->
                 if basetype |> FSharpType.hasBaseType<ALCodeunit>
-                then Complex (Codeunit name)
+                then Complex (Codeunit compiledName) |> Some
                 elif basetype |> FSharpType.isOfType<ALRecord>
-                then Complex (Record name)
-                else loop basetype.BaseType
-        loop x.BaseType
+                then Complex (Record compiledName) |> Some
+                else basetypeloop basetype.BaseType
+        
+        match resolveALType alAttributes with
+        | Some attrtype -> Some attrtype 
+        | None -> basetypeloop x.BaseType
+        
+        
     let hasAttribute<'t> (x:t) =
         x.HasAttribute<'t>() // returns everything that contains attr
         
@@ -246,9 +254,6 @@ module FSharpEntity =
         x.TryGetMembersFunctionsAndValues()
         
     let getALCompiledName (x:t) =
-        match x.TryGetAttribute<ALSingleInstanceCodeunit>() with
-        | Some attr -> x.DisplayName
-        | _ ->
         match x.BaseType with
         | Some bt when bt |> FSharpType.hasBaseType<ALObjectValue> -> x.CompiledName
         | _ -> 
@@ -256,10 +261,10 @@ module FSharpEntity =
         | Some alname -> alname.ConstructorArguments[0] |> snd :?> string
         | None -> 
             match x.TryGetAttribute<CompiledNameAttribute>() with
-            | None -> failwithf $"has no compiled name" 
             | Some compname -> compname.ConstructorArguments[0] |> snd :?> string
-           
-        
+            | None -> x.DisplayName
+
+
 module FSharpMemberOrFunctionOrValue =
     
     type private t = FSharpMemberOrFunctionOrValue
