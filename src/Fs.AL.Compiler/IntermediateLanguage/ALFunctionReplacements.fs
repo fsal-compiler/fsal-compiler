@@ -26,20 +26,6 @@ let replacementFunctions : ( string * ((FSharpExpr -> ALExpression) -> FSharpExp
         (fun toAL obj mem args -> ALExpression.createInvocation "ReadFrom" [toAL obj.Value] )
         "System.DateTime.get_Now",
         (fun toAL obj mem args -> ALExpression.createInvocation "CurrentDateTime" [] )
-        "Fable.JsonProvider.jsonParse",
-        (fun toAL obj mem args ->
-            ("ReadFrom",args |> List.map toAL)
-            |> InvocationWithoutTarget
-            |> FSALExpr 
-        )
-        "Fable.JsonProvider.getProp",
-        (fun toAL obj mem args ->
-            // <target>.<member>
-            //a.SelectToken('something',outputvar)
-            (toAL args[0],"SelectToken",[toAL args[1]])
-            |> InvocationWithoutLastArg
-            |> FSALExpr
-        )
         "Fs.AL.Core.ALFunctions.ALDialog.Message",
         (fun toAL obj mem args -> ALExpression.createMemberAccessInvocation (Identifier "Dialog") "Message" (args |> List.map toAL)  )
         "Fs.AL.Core.ALFunctions.ALDialog.Error",

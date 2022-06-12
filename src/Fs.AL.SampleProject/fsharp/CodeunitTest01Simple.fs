@@ -12,19 +12,19 @@ type SimpleCodeunit() =
 
     member this.getNumber() = 5
     member this.getText() = "asdasd"
-    member this.getTime() = DateTime.Now // replaced with CurrentDateTime() in AL
+    // member this.getTime() = DateTime.Now // replaced with CurrentDateTime() in AL
 
-    member this.getDeclaredMember() =
-        let declaredmember = this.getNumber()
-        declaredmember // compiles to exit(declaredmember)
+    // member this.getDeclaredMember() =
+    //     let declaredmember = this.getNumber()
+    //     declaredmember // compiles to exit(declaredmember)
 
-    member this.assignment (input : int) =
-        let value = input
+    // member this.assignment (input : int) =
+    //     let value = input
         
-        let value3 = 5
-        let mutable value2 = input 
-        value2 <- 5 
-        value2 <- 10
-        value
+    //     let value3 = 5
+    //     let mutable value2 = input 
+    //     value2 <- 5 
+    //     value2 <- 10
+    //     value
     
 

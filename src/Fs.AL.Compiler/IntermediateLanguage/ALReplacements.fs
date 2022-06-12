@@ -67,7 +67,7 @@ type ALFunctionReplacementArgs =
 /// { new IALFunctionReplacement with
 ///     member this.FunctionName = "System.DateTime.get_Now"
 ///     member this.Replacement =
-///         (fun variableDecls toAL obj mem args -> ALExpression.Identifier "Hello" )
+///         (fun context -> ALExpression.Identifier "Hello" )
 /// }
 /// </code>
 type IALFunctionReplacement =

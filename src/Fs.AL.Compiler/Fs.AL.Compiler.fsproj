@@ -12,6 +12,7 @@
         <Compile Include="Fullname\Operators.fs" />
         <Compile Include="Fullname\Core.fs" />
         <Compile Include="Fullname\Types.fs" />
+        <Compile Include="CompilerServices\Settings.fs" />
         <Compile Include="CompilerServices\CompilerService.fs" />
         <Compile Include="CompilerServices\CompilerSymbols.fs" />
         <Compile Include="CompilerServices\CompilerDeclarations.fs" />
@@ -25,6 +26,7 @@
         <Compile Include="IntermediateLanguage\ALReplacements.fs" />
         <Compile Include="IntermediateLanguage\ALReplacements_Microsoft_FSharp_Core.fs" />
         <Compile Include="IntermediateLanguage\ALReplacements_System.fs" />
+        <Compile Include="IntermediateLanguage\ALReplacements_Fable_JsonProvider.fs" />
         <Compile Include="IntermediateLanguage\ALContext.fs" />
         <Compile Include="IntermediateLanguage\ALExpressions.fs" />
         <Compile Include="IntermediateLanguage\ExpressionReader.fs" />

@@ -11,6 +11,7 @@ open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.ALSimpleValues
 
 /// System.IO.TextWriter.WriteLine
+/// stdout.WriteLine
 let ``TextWriter.WriteLine`` = 
     
     { new IALFunctionReplacement with
@@ -20,14 +21,11 @@ let ``TextWriter.WriteLine`` =
                 let objTarget = rargs.objExpr.Value 
                 match objTarget with
                 | FSharpExprPatterns.Call(_, memberOrFunc, _, _, _) ->
-                    let fname = memberOrFunc |> FSharpSymbol.getTypeFullName // val stdout
-                    match memberOrFunc.FullName with
+                    let fullname = memberOrFunc |> FSharpSymbol.getTypeFullName // val stdout
+                    match fullname with
                     | Operators.stdout ->
-//                        let ctx = rargs.context |> ALExprContext.get
                         ALExpression.createMemberAccessInvocation
-                            (Identifier "Dialog")
-                            "Message"
-                            (rargs.argExprs |> List.map rargs.toAL)
+                            (Identifier "Dialog") "Message" (rargs.argExprs |> List.map rargs.toAL)
                     | _ -> raise (NotImplementedException())
                 | _ -> raise (NotImplementedException())                             
             )

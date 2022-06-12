@@ -7,6 +7,7 @@ open Fs.AL.Compiler.ALBuilder
 open Fs.AL.Compiler.ALCodeGeneration.ALGenerator
 open Fs.AL.Compiler.CompilerDeclarations
 open Fs.AL.Compiler.CompilerService
+open Fs.AL.Compiler.CompilerServices
 open Fs.AL.Compiler.IntermediateLanguage
 open Microsoft.FSharp.Core
 
@@ -15,11 +16,13 @@ Directory.SetCurrentDirectory(__SOURCE_DIRECTORY__ + @"./../Fs.AL.SampleProject/
 #endif
 
 let settings =
-    match "fsal.json" |> File.Exists with
-    | false -> failwith "no fsal.json found"
+    match "fsal.jsonc" |> File.Exists with
+    | false -> failwith "no fsal.jsonc found"
     | true ->
-        "fsal.json"
-        |> File.ReadAllText
+        "fsal.jsonc"
+        |> File.ReadAllLines
+        |> Array.filter (fun f -> not (f.TrimStart().StartsWith("//")))
+        |> String.concat ""
         |> JsonSerializer.Deserialize<FSharpToALCompilerSettings>
 
 let starttime = DateTime.Now
@@ -54,6 +57,9 @@ let replacementfunctions =
         inst.FunctionName,inst
     )
     |> dict
+    
+let v1 = replacementfunctions
+let v2 = 1
      
         
 let compilerCtx =

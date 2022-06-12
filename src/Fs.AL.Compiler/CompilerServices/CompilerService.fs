@@ -6,22 +6,10 @@ open System.Xml.Linq
 open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Diagnostics
 open FSharp.Compiler.Symbols
+open Fs.AL.Compiler.CompilerServices
 
 
-//type FSharpToALCompilerSettings() =
-//    member val sourcePath : string = null with get, set
-//    member val outputPath : string = null with get, set
-//    member val includePaths : string list option = None with get, set
-//    member val includeDlls : string list option = None with get, set
 
-type FSharpToALCompilerSettings = {
-    sourcePath : string option
-    outputPath : string option
-    includePaths : string list option 
-    includeDlls : string list option 
-}
-
-/// todo: this is a great place to limit functionality with included std dlls
 let getReferences (settings:FSharpToALCompilerSettings) =
     let envar x = System.Environment.ExpandEnvironmentVariables x
     [
@@ -177,6 +165,10 @@ type Project(fsprojFile: string) =
 
     /// defaults to fsproj name
     member val Name = fsprojFile |> Path.GetFileNameWithoutExtension with get, set
+    
+    member val FsProjDirectory = FileInfo(fsprojFile).DirectoryName 
+    
+    
 
     member val Checker =
         FSharpChecker.Create(
@@ -187,7 +179,7 @@ type Project(fsprojFile: string) =
 
     member this.ProjectFiles =
         lazy (
-            let projectDir = FileInfo(fsprojFile).DirectoryName
+            let projectDir = this.FsProjDirectory
 
             let compiledFiles =
                 fsprojFile
@@ -224,7 +216,10 @@ type FSharpProjectOptions with
     static member ofProject (settings:FSharpToALCompilerSettings) (proj: Project) =
         { ProjectFileName = proj.Name
           ProjectId = None
-          SourceFiles = proj.ProjectFiles.Value
+          SourceFiles =
+              match settings.includeFiles with
+              | None -> proj.ProjectFiles.Value
+              | Some f -> f |> Seq.map (fun f -> Path.Combine(proj.FsProjDirectory, f)) |> Seq.toArray
           
           OtherOptions =
             [|
