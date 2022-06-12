@@ -7,6 +7,7 @@ open Fs.AL.Compiler.ALBuilder
 open Fs.AL.Compiler.ALCodeGeneration.ALGenerator
 open Fs.AL.Compiler.CompilerDeclarations
 open Fs.AL.Compiler.CompilerService
+open Fs.AL.Compiler.IntermediateLanguage
 open Microsoft.FSharp.Core
 
 Directory.SetCurrentDirectory(__SOURCE_DIRECTORY__ + @"./../Fs.AL.SampleProject/")
@@ -51,11 +52,34 @@ let fsharpImplementations =
     |> Seq.collect id
     |> Seq.toArray
 
+
+let replacementfunctions =
+    let t = typeof<IALFunctionReplacement>
+    let replacements =
+        AppDomain.CurrentDomain.GetAssemblies()
+        |> Seq.collect (fun f -> f.GetTypes())
+        |> Seq.where (fun f ->
+            t.IsAssignableFrom(f)
+            && not f.IsInterface
+        )
+        
+    replacements
+    |> Seq.map (fun f ->
+        let inst = Activator.CreateInstance(f) :?> IALFunctionReplacement
+        inst.FunctionName,inst
+    )
+    |> dict
+     
+        
 let compilerCtx =
     let builders = fsharpImplementations |> Seq.where (fun (f,mem) -> not f.IsAbstractClass)     
     let abstractClasses = fsharpImplementations |> Seq.where (fun (f,mem) -> f.IsAbstractClass)  |> Seq.map ALObjectBuilder.ofEntityWithMembers |> Seq.toArray
     {
-        builders = builders |> Seq.map ALObjectBuilder.ofEntityWithMembers |> Seq.toArray
+        builders =
+            builders
+            |> Seq.map ALObjectBuilder.ofEntityWithMembers
+            |> Seq.map (fun f -> { f with registeredFunctionReplacements = replacementfunctions })
+            |> Seq.toArray
         cache = {
             abstractClasses = abstractClasses
             outputPath = settings.outputPath |> Option.defaultValue "al"

@@ -15,10 +15,60 @@ module FSharpAttribute =
     let isOfType (t:Type) (attr:FSharpAttribute) =
         attr.AttributeType.FullName = t.FullName.Replace("+",".")
     
-
+    
+module FSharpSymbol =
+    type private t = FSharpSymbol
+    let (|IsTypeCast|_|) (x:t) =
+        match x.FullName with
+        | Operators.int -> Some()
+        | Operators.string -> Some()
+        | _ -> None
+    let getTypeFullName (x:t) =
+        match x with
+        | :? FSharpEntity as v ->
+            let roottype =
+                v.AbbreviatedType
+                |> FSharpType.getRootType
+            roottype.TypeDefinition.FullName
+            
+        | n -> raise (NotImplementedException($"symbol not implemented {n}"))
+        
+    let getRootType (x:t) =
+        match x with
+        | :? FSharpEntity as v ->
+            let roottype =
+                v.AbbreviatedType
+                |> FSharpType.getRootType
+            roottype            
+        | n -> raise (NotImplementedException($"symbol not implemented {n}"))
+        
+    
+//    targetType.GenericArguments[0].TypeDefinition
 module FSharpType =
     
     type private t = FSharpType
+    
+    let tryGetGenericTypeArg (x:t) =
+        match x.GenericArguments |> Seq.toList with
+        | [ x ] -> Some x 
+        | _ -> None 
+        
+        
+    
+    let getRootType (x:t) : FSharpType =
+        let rec typeSeq (currType:t) =
+            seq {
+                yield currType
+                yield! typeSeq currType.AbbreviatedType 
+            }
+        let rootType =
+            typeSeq x 
+            |> Seq.pairwise 
+            |> Seq.find (fun (t1,t2) -> t1 = t2 )
+            |> snd
+        rootType
+            
+        
     
     let rec hasBaseType<'t> (x:t) =
         if x.IsFunctionType then false else
@@ -83,40 +133,46 @@ module FSharpType =
         x.FullName = "Microsoft.FSharp.Core.byref"
         || x.FullName = "Microsoft.FSharp.Core.Ref"
     let isUnit (x:FSharpType) = x.AbbreviatedType.TypeDefinition.FullName = "Microsoft.FSharp.Core.Unit"
+    
+    let getRootFullName (x:FSharpType) =
+        x |> FSharpType.getRootType |> FSharpType.getFullName
     let getFullName (x:FSharpType) =
-        x.TypeDefinition |> FSharpEntity.getRootType
-        :> FSharpSymbol
-        |> (fun f -> f.FullName)
-
+        let t = 
+            x.TypeDefinition
+            :> FSharpSymbol
+            |> (fun f -> f.FullName)
+#if DEBUG
+        match t with
+        | "Microsoft.FSharp.Core.[]" -> () 
+        | _ when t.StartsWith("Microsoft.FSharp") ->  failwith $"invalid type {t}"
+        | _ -> ()
+#endif
+        t
+        
 module FSharpEntity =
     
     type private t = FSharpEntity
     
     /// goes through abbreviations
-    let rec  getRootType (x:t) =
+    let rec getRootEntity (x:t) : FSharpEntity =
         let rt = 5
 //        if x.Assembly.QualifiedName = "" then "+++JsonProvider:"+x.DisplayName else
         //TODO : test
         
         match x.IsFSharpAbbreviation with
         | false -> x
-        | true -> x.AbbreviatedType.TypeDefinition |> getRootType
+        | true -> x.AbbreviatedType.TypeDefinition |> getRootEntity
     
-    let rec private getRootTypeFullName (x:t) =
-        let rt = 5
-//        if x.Assembly.QualifiedName = "" then "+++JsonProvider:"+x.DisplayName else
-        //TODO : there might be other provided types
-        if x.IsProvided then "System.Text.Json.Nodes.JsonValue" else
-        if x.IsArrayType then "System.Text.Json.Nodes.JsonArray" else
         
+    let rec private getRootTypeFullName (x:t) =
+        //TODO : there might be other provided types
+        if x.IsProvided then
+            let debug = 123123
+            "System.Text.Json.Nodes.JsonValue" else
+//        if x.IsArrayType then "System.Text.Json.Nodes.JsonArray" else
         match x.IsFSharpAbbreviation with
         | false -> x.FullName
         | true -> x.AbbreviatedType.TypeDefinition |> getRootTypeFullName
-        
-        
-        
-        
-        
         
     let getFullName (x:t) =
         let rootfullname = x |> getRootTypeFullName
@@ -130,7 +186,8 @@ module FSharpEntity =
         |> Type.GetType
         |> Activator.CreateInstance
         
-    let tryGetType (x:t) =
+    /// gets first generic type arg
+    let tryGetGenericTypeArg (x:t) =
         let ctor =
             x.MembersFunctionsAndValues
             |> Seq.tryFind (fun f -> f.IsConstructor )
@@ -208,9 +265,9 @@ module FSharpMemberOrFunctionOrValue =
     let isNot (x:t) = x.FullName = Operators.``not``
     
 //    let isString (x:t) = x.FullName = FullNameOperators.string
-    let getDisplayName (x:t) =
-        if x.IsCompilerGenerated then x.DisplayName
-        else x.FullType.AbbreviatedType.TypeDefinition.DisplayName
+//    let getDisplayName (x:t) =
+//        if x.IsCompilerGenerated then x.DisplayName
+//        else x.FullType.AbbreviatedType.TypeDefinition.DisplayName
         
         
 

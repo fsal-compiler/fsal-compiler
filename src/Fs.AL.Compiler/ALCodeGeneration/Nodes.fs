@@ -59,12 +59,9 @@ module TypeReference =
             let coe = sf.IdentifierName $"{name}"
             let objnameorid = sf.ObjectNameOrId(coe)
             let reckeyword = sf.ParseToken("Codeunit").WithTrailingTrivia(sf.Space).WithLeadingTrivia(sf.Space)
-//            let reckeyword = sf.Token(sk.RecordTypeReference).WithTrailingTrivia(sf.Space)
             let st = sf.SubtypedDataType(reckeyword,objnameorid)
             sf.SimpleTypeReference(st)
             |> (fun f -> f.WithLeadingTrivia(sf.Space))
-//            let str = sf.RecordTypeReference(st)
-//            st :> TypeReferenceBaseSyntax
         | _ ->
             name
             |> ALType.toString
@@ -199,3 +196,6 @@ module FieldList =
                 
         
         list
+
+
+

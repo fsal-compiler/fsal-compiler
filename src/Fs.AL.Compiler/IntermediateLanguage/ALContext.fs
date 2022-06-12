@@ -1,5 +1,6 @@
 module rec Fs.AL.Compiler.IntermediateLanguage.ALContext
 
+open System.Collections.Generic
 open System.Collections.ObjectModel
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
@@ -16,47 +17,7 @@ open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
 // Tom Hvitved - Architectural Analysis of Microsoft Dynamics NAV
 // Page 30 - definition of procedure
 
-[<RequireQualifiedAccess>]
-type LetExprKind =
-    | Decision
-    | Declaration
-    | TypeProvider of func:FSharpMemberOrFunctionOrValue * targetType:FSharp.Compiler.Symbols.FSharpType * args:FSharpExpr list
-    | Constructor
-    | Invocation 
-    | Normal
 
-[<RequireQualifiedAccess>]
-type ALExprContext =
-    | NoContext
-    | Sequential of chain:FSharpExpr list
-    | BindingVar of FSharpMemberOrFunctionOrValue
-    | LetBinding of bindVar:FSharpMemberOrFunctionOrValue * kind:LetExprKind // var:FSharpMemberOrFunctionOrValue * bindingExpr:FSharpExpr
-    | DecisionTree of decisionExpr:FSharpExpr * targets:ALExpression list
-    | Constructor of identifier:string
-    static member usingCtx (ctx:ALExprContext) (b:ALProcedureContext) fn  =
-        b.expressionContext.Add(ctx)
-        let result = fn b
-        b.expressionContext.Remove(ctx) |> ignore
-        result
-        
-    static member getCtorCtx (b:ALProcedureContext) =
-        b.expressionContext
-        |> Seq.choose (fun f ->
-            match f with
-            | ALExprContext.Constructor identifier -> identifier |> Some     
-            | _ -> None
-        )
-        |> Seq.tryLast
-        
-    static member getLetBindingCtx (b:ALProcedureContext) =
-        b.expressionContext
-        |> Seq.choose (fun f ->
-            match f with
-            | ALExprContext.LetBinding(memberOrFunctionOrValue, letExprKind) -> (memberOrFunctionOrValue,letExprKind) |> Some     
-            | _ -> None
-        )
-        |> Seq.tryLast
-        
 
 type ALProcedureContext =
     {
@@ -68,6 +29,7 @@ type ALProcedureContext =
         returnType : ALType option
         entity : FSharpEntity
         mutable expressionContext : ObservableCollection<ALExprContext>
+        mutable registeredReplacements : IDictionary<string,IALFunctionReplacement>
     }
     static member Default = {
         isLocal = false
@@ -78,6 +40,7 @@ type ALProcedureContext =
         returnType = None
         entity = Unchecked.defaultof<FSharpEntity>
         expressionContext = ObservableCollection()
+        registeredReplacements = Dictionary()
     }
     
         

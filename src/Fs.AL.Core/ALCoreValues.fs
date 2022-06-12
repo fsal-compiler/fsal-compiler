@@ -19,6 +19,8 @@ type ALSimpleType =
     | Option of values: string list
     | List of listArg : ALSimpleType
     | Integer
+    | JsonToken
+    | JsonArray
     
 type ALComplexType =    
     | ComplexType of typename:string
@@ -45,11 +47,6 @@ type ALTestAction(str:string) =
     do failwith "todo"
     member val Value = str with get, set
     
-//type ALRecordRef(str:string) =
-//    do failwith "todo"
-//    member val Value = str with get, set
-    
-
 type ALObjectType(str:string) =
     do failwith "todo"
 

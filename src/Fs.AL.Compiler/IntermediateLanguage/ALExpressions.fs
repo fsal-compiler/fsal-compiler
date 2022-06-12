@@ -1,10 +1,11 @@
-module rec Fs.AL.Compiler.IntermediateLanguage.FSharpExpressionsMapping
+module rec Fs.AL.Compiler.IntermediateLanguage.ALExpressions
 
 open System
 open System.Diagnostics
 open Fs.AL.Compiler
 open Fs.AL.Compiler.CompilerServices
 open Fs.AL.Compiler.CompilerSymbols
+open Fs.AL.Compiler.IntermediateLanguage
 open Fs.AL.Compiler.IntermediateLanguage.ALContext
 open Fs.AL.Compiler.Visitors
 open Fs.AL.Core.ALCoreValues
@@ -13,49 +14,14 @@ open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Compiler.Fullname
 open ALLanguage
 open Fs.AL.Core.Abstract
-open Microsoft.FSharp.Reflection
 open System.Reflection
-
-module JsonTokens =
-    let private getFirstCast fullname =
-        match fullname with
-        | TypeReplacements.FullNames.FsArray -> "AsArray"
-        | TypeReplacements.FullNames.String 
-        | TypeReplacements.FullNames.Int32 
-        | TypeReplacements.FullNames.Boolean 
-        | TypeReplacements.FullNames.Double -> "AsValue"
-        | TypeReplacements.FullNames.JsonValue -> "AsObject"
-        | TypeReplacements.FullNames.JsonArray -> "AsArray"
-        | x when x.StartsWith "Fable.JsonProvider.Generator<...>" -> "AsObject"
-        | x -> failwithf $"unimplemented case %A{x}"
-    
-    let private getSecondCast fullname =
-        match fullname with
-        | TypeReplacements.FullNames.FsArray -> "___"
-        | TypeReplacements.FullNames.JsonArray -> "___"
-        | TypeReplacements.FullNames.String -> "AsText"
-        | TypeReplacements.FullNames.Int32 -> "AsInteger"
-        | TypeReplacements.FullNames.Boolean -> "AsBoolean"
-        | TypeReplacements.FullNames.Double -> "AsDecimal"
-        | TypeReplacements.FullNames.JsonValue -> "AsToken"
-        | x when x.StartsWith "Fable.JsonProvider.Generator<...>" -> "AsToken"
-        | x -> failwithf $"unimplemented case %A{x}"
         
-    let getJsonCastExpr (identifier:ALExpression) (fullTypeName:string) = //letBindVarJsonName
-        let _castMethod1 = fullTypeName |> getFirstCast
-        let _castMethod2 = fullTypeName |> getSecondCast
-        let firstCast = ALExpression.createMemberAccessInvocation identifier _castMethod1 []
-        match fullTypeName with
-        |  TypeReplacements.FullNames.FsArray -> firstCast
-        |  TypeReplacements.FullNames.JsonArray -> firstCast
-        |  x when x.StartsWith "Fable.JsonProvider.Generator<...>" -> identifier
-        | _ -> 
-            ALExpression.createMemberAccessInvocation firstCast _castMethod2 []
-    
+        
 module FSharpOperators =
-    let (|HasFSharpOperator|_|) b argExprs (s:string) : ALExpression option =  
+    let (|HasFSharpOperator|_|) b argExprs (s:FSharpSymbol) : ALExpression option =
+        let fullname = s.FullName
         let binaryOp operator = Some (handleGenericOperator b argExprs operator)
-        match s with
+        match fullname with
         | Operators.op_PipeRight -> Some (handleOperatorPipeRight b argExprs)    
         | Operators.not -> Some (handleOperatorNot b argExprs)    
         | Operators.failwith -> Some (handleOperatorFailwith b argExprs)    
@@ -65,25 +31,6 @@ module FSharpOperators =
         | Operators.op_Equals -> binaryOp Equals  
         | Operators.op_GreaterThan -> binaryOp GreaterThan    
         | Operators.op_LessThan -> binaryOp LessThan    
-        | "Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray" -> Some (handleArrayGetIndex b argExprs)    
-        // cast to int
-        | Operators.int ->
-            match argExprs[0] with
-            | FSharpExprPatterns.Coerce(targetType, inpExpr) ->
-                let alexpr = ALExpression.ofFSharpExpr b inpExpr 
-                Some alexpr // just ignore the coercion
-            | x ->
-                failwithf $"unimplemented case %A{x}"
-                None
-        // cast to string
-        | Operators.string ->
-            match argExprs[0] with
-            | FSharpExprPatterns.Coerce(targetType, inpExpr) ->
-                let alexpr = ALExpression.ofFSharpExpr b inpExpr 
-                Some alexpr // just ignore the coercion
-            | x ->
-                failwithf $"unimplemented case %A{x}"
-                None
         | _ -> None
         
     let private handleOperatorPipeRight b (argExprs:FSharpExpr list) = 
@@ -113,34 +60,11 @@ module FSharpOperators =
         let a1 = ALExpression.ofFSharpExpr b argExprs[1]
         ALExpression.createBinary a0 operator a1
         
-    let handleArrayGetIndex b (argExprs:FSharpExpr list) =
-        let identifier,arraytype =
-            match argExprs[0] with
-            | FSharpExprPatterns.Value(v) -> Identifier v.DisplayName ,v.FullType.GenericArguments[0]
-            | FSharpExprPatterns.Coerce(targetType, inpExpr) -> 
-                let t = inpExpr |> ALExpression.ofFSharpExpr b
-                match t with
-                | FSALExpr (InvocationWithoutLastArg (target,methodname,args)) ->
-                    failwith "needs reimplementation"
-                    
-                | _ -> failwithf $"unimplemented %A{t}"
-                
-            | _ -> failwithf $"not an array type {argExprs}"
+    
             
         
-        let idx = ALExpression.ofFSharpExpr b argExprs[1]
         
-        let symtype =
-            arraytype.TypeDefinition
-            :> FSharpSymbol
-            |> (fun f -> f.FullName)
-        let d = 5
-        if symtype.StartsWith "Fable.JsonProvider.Generator<...>" then
-            // assign json token in let expr
-            FSALExpr (InvocationWithoutLastArg(identifier,"Get",[idx]))
-        else
-            
-        failwithf $"not implemented"
+        
         
     let private handleOperatorFailwith b argExprs =
         (List.map (ALExpression.ofFSharpExpr b) argExprs)
@@ -148,9 +72,6 @@ module FSharpOperators =
 
 
 module ALExpressionTranslation =
-    
-    
-    
     
     let translateDecisionTreeSuccess (b:ALProcedureContext) (exp:FSharpExpr) =
         match exp with
@@ -201,7 +122,7 @@ module ALExpressionTranslation =
                 // constructor assignments
                 | FSharpExprPatterns.Let((bindingVarInner, _, _), _) -> 
                     let newIdentifier = "." + letBindingVar.DisplayName
-                    ALExprContext.usingCtx (ALExprContext.Constructor newIdentifier) b 
+                    ALExprContext.usingCtx (ALExprContext.Constructor newIdentifier) b.expressionContext 
                         (fun f ->
                         LetExprKind.Constructor,letBindingExpr |> ALExpression.ofFSharpExpr b 
                     )
@@ -217,14 +138,14 @@ module ALExpressionTranslation =
                         match memberOrFunc.FullName with
                         | "Fable.JsonProvider.jsonParse" ->
                             let expkind = LetExprKind.TypeProvider (memberOrFunc,targetType,argExprs)
-                            LetExprKind.Invocation ,
-                            ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b (fun f ->
+                            LetExprKind.Override ,
+                            ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b.expressionContext (fun f ->
                                 letBindingExpr |> ALExpression.ofFSharpExpr b
                             )
                         | "Fable.JsonProvider.getProp" ->
                             let jsonprovtest = 11111
                             let expkind = LetExprKind.TypeProvider (memberOrFunc,targetType,argExprs)
-                            ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b (fun f ->
+                            ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b.expressionContext (fun f ->
                                 LetExprKind.TypeProvider (memberOrFunc,targetType,argExprs),
                                 letBindingExpr |> ALExpression.ofFSharpExpr b
                             )
@@ -232,15 +153,95 @@ module ALExpressionTranslation =
                         | _ -> failwith "unimplemented coerce"
                     | _ -> failwith "unimplemented coerce"
                 // TODO: casting
-//                | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, argExprs) ->
-//                    let symbol = memberOrFunc :> FSharpSymbol
-//                    let test1 = 1
-//                    match symbol.FullName with 
-//                    | FSharpOperators.HasFSharpOperator b argExprs result ->
-//                        let resu1 = result
-//                        LetExprKind.Normal,letBindingExpr |> ALExpression.ofFSharpExpr b                        
-//                    | _ -> failwith "test"
-////                    
+                | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, argExprs) ->
+                    let symbol = memberOrFunc :> FSharpSymbol
+                    match symbol with
+                    | FSharpSymbol.IsTypeCast ->
+                        let v1 = 1
+                        let exp = argExprs[0] |> ALExpression.ofFSharpExpr b
+                        let castFrom = typeArgs2[0] |> FSharpType.getRootType
+                        let castTo = letBindingVar.FullType |> FSharpType.getRootType
+                        let casted = ALExpression.handleTypeCast b castFrom castTo exp letBindingVar
+                        LetExprKind.Override ,casted |> ALExpression.fromALStatement
+                        
+                        
+                        
+                            
+                        
+                    | _ -> 
+                        
+                    
+                    match symbol.FullName with
+                    | Core.GetArray ->
+//                        let index = argExprs[1] |> ALExpression.ofFSharpExpr b |> ALExpression.convertTo1BasedIndex
+                        let expkind = LetExprKind.TypeProvider (memberOrFunc,typeArgs2[0],argExprs)
+                        let xprt = 
+                            ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b.expressionContext (fun f ->
+//                                LetExprKind.TypeProvider (memberOrFunc,typeArgs2[0],argExprs),
+                                letBindingExpr |> ALExpression.ofFSharpExpr b
+                            )
+//                        let rr = argExprs[0] |> ALExpression.ofFSharpExpr b
+                        let v1 = 5
+                        LetExprKind.Normal,xprt 
+                    | _ ->   
+                        let test1 = 1
+//                        let (FSharpExprPatterns.Coerce(c) ) = argExprs[0]
+                        match symbol with 
+                        | FSharpSymbol.IsTypeCast ->
+                            match argExprs[0] with
+                            | FSharpExprPatterns.Coerce(targetType, inpExpr) ->
+                                let alexpr = ALExpression.ofFSharpExpr b inpExpr
+                                match alexpr with
+                                | FSALExpr (InvocationWithoutLastArg (target,method,args)) ->
+                                    match method with
+                                    | "SelectToken" ->
+                                        let expkind = LetExprKind.TypeProvider (memberOrFunc,targetType,argExprs)
+                                        let e1 = 
+                                            ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b.expressionContext (fun f ->
+                                                LetExprKind.TypeProvider (memberOrFunc,targetType,argExprs),
+                                                letBindingExpr |> ALExpression.ofFSharpExpr b
+                                            )
+                                        let targetJsonProp : string  = args[0] |> ALExpression.getConstValue |> unbox 
+                                        let jVarName = $".{target}.{targetJsonProp}Token@{b.localVariables.Count}" 
+                                        let jArrayVarName = $".{target}.{targetJsonProp}Array@{b.localVariables.Count}" 
+                                        // declare intermediary variables
+                                        [
+                                            ALVariable.createSimple jVarName JsonToken    
+                                            ALVariable.createSimple jArrayVarName JsonArray    
+                                        ]
+                                        |> List.iter b.localVariables.Add
+                                        
+//
+//                                        let allExpressions =
+//                                            [
+//                                                ALStatement.createSelectToken "_jtoken" (args @ [Identifier jVarName])
+//                                                ALStatement.createAssignment jArrayVarName
+//                                                    (ALExpression.createJsonCastExpr jVarName targetType)
+//    //                                            ALStatement.createMemberCall jArrayVarName "Get" ([Constant idx] @ [Identifier "_jtoken"])
+//    //                                            ALStatement.createValAssignment letBindVal
+//    //                                                (ALExpression.createJsonCastExpr "_jtoken" letBindVal.FullType)
+//                                                    
+//                                            ]
+//                                            |> ALStatement.sequenceOf
+                                            
+//                                        LetExprKind.Override, allExpressions |> ALExpression.fromALStatement
+                                        e1 
+                                          
+                                        
+                                    | n -> failwith $"unimplemented {n}"
+                                | _ ->  
+                                    
+                                LetExprKind.Normal, alexpr // just ignore the coercion
+                            | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, _) ->
+                                // al does not need a type cast between int/decimal
+                                let exp1 = argExprs[0] |> ALExpression.ofFSharpExpr b 
+                                LetExprKind.Override, Assignment(ALExpression.createIdentifer letBindingVar,exp1) |> ALExpression.fromALStatement // just ignore the coercion
+                            | x -> failwithf $"unimplemented case %A{x}"
+                        | FSharpOperators.HasFSharpOperator b argExprs result ->
+                            let v1 = 1
+                            LetExprKind.Normal,result
+                                                
+                        | _ -> failwith "test"
                 | _ -> LetExprKind.Normal,letBindingExpr |> ALExpression.ofFSharpExpr b
  
             // declare AL variable
@@ -259,7 +260,7 @@ module ALExpressionTranslation =
             let fsalBodyExpr() = letBodyExpr |> ALExpression.ofFSharpExpr b |> ALStatement.ofExpression
             let test2 = 5
             match bindingCtx, letBindingVar.IsCompilerGenerated with
-            | LetExprKind.Invocation,_ ->
+            | LetExprKind.Override,_ ->
                 declareVariable()
                 Sequence(bindings |> ALStatement.ofExpression,fsalBodyExpr()) |> ALExpression.fromALStatement
             | LetExprKind.TypeProvider(memberOrFunctionOrValue, targetType, exprs),_ ->
@@ -312,7 +313,7 @@ module ALExpressionTranslation =
                 // compiler-generated constructor statements // -- before constructor statement
 //                b.expressionContext.Remove(context) |> ignore // remove let statement context
                 
-                match ALExprContext.getCtorCtx b with
+                match ALExprContext.getCtorCtx b.expressionContext with
                 | None ->
                     let assignmentsBlock =
                         varToAdd |> b.localVariables.Add
@@ -397,6 +398,8 @@ module ALExpressionTranslation =
                 
         | _ -> failwith "invalid expression"
     
+    
+    
     let translateDecisionTree b expr : ALExpression =
         match expr with 
         | FSharpExprPatterns.DecisionTree(decisionExpr, decisionTargets) ->
@@ -431,48 +434,26 @@ module ALExpressionTranslation =
                 context2
             
             let res =
-                ALExprContext.usingCtx context b
+                ALExprContext.usingCtx context b.expressionContext
                     (fun f ->
                         let createdExpression = decisionExpr |> ALExpression.ofFSharpExpr b
                         let asd1 = 5
                         createdExpression
                 )
-            
-            // pattern match case is different in AL
-            
-            
-            // todo: this may add unnecessary variables
-            // figure out a way to evaluate once
-//                let bcopy =
-//                    { b with
-//                        localVariables = ObservableCollection()
-//                        statements = ObservableCollection() }
-//                                
-            // assign decision targets
-            let f1 = 5
-            // todo: get let binding context
-            
             let assignedLetVar =
                 match b.expressionContext |> Seq.last with
                 | ALExprContext.LetBinding(memberOrFunctionOrValue, bindingExpr) ->
                     Some memberOrFunctionOrValue
                 | _ -> None
-             
-//            let expressionWithDecisions =
-//                res
-//                |> ALExpression.replaceDecisionExpressions
-//                       true
-//                       (System.Collections.Generic.Dictionary())
-//                       assignedLetVar.Value.DisplayName
-////                       letBinding.DisplayName
-//                       (ALExpression.ofFSharpExpr b)
-//                       decisionTargets
-//            ALStatement.ofExpression (Identifier "test")
-//            |> StatementExpr
-//            |> FSALExpr
             res
             
         | _ -> failwith "invalid expression"
+        
+let (|HasALFunctionReplacement|_|) (b:ALProcedureContext) (s:string) : (ALFunctionReplacementArgs -> ALExpression) option =
+    match b.registeredReplacements.TryGetValue(s) with
+    | true, v -> Some v.Replacement
+    | _ -> None
+
 module ALExpression =
     let handleConst (statements:ResizeArray<ALStatement>) (varDeclarations:ResizeArray<ALVariable>)
         (constValueObj:obj, constType:FSharpType) =
@@ -480,39 +461,39 @@ module ALExpression =
             if constValueObj = () then ()
             else Exit (Constant constValueObj) |> statements.Add
     
-    let getConstValue (exp:ALExpression) =
-        match exp with
-        | Constant o -> o 
-        | _ -> failwith "not a constant expresison"
     
-
-    
-
-
-
-
-    let isRefValue (exp:FSharpExpr) =
+    let handleTypeCast (b:ALProcedureContext) (fromType:FSharpType) (toType:FSharpType) (exp:ALExpression) (value:FSharpMemberOrFunctionOrValue) : ALStatement =
         match exp with
-        | FSharpExprPatterns.Value (valueToGet) ->
-            valueToGet.FullType.AbbreviatedType.TypeDefinition.FullName
-                = "Microsoft.FSharp.Core.FSharpRef`1"
-        | _ -> false
-    let isNewObject (exp:FSharpExpr) =
-        match exp with
-        | FSharpExprPatterns.NewObject(objType, typeArgs, argExprs) ->  true
-        | _ -> false
+        | FSALExpr(StatementExpr statement) ->
+            let preceding,last = ALStatement.unwrapStatement [] statement
+            let tempIdentifier = ("@"+value.DisplayName+"Temp")
+            let assignments =
+                match fromType |> FSharpType.getFullName, toType |> FSharpType.getFullName with
+                | _,Types.String ->
+                    // declare variable
+                    {
+                        name = tempIdentifier
+                        isMutable = false
+                        altype = ALType.ofFSharpType toType
+                    }
+                    |> ALProcedureContext.ensureHasVariable b
+                    let rside = ALExpression.createInvocation "format" [last |> ALExpression.ofALStatement]
+                    let assigment1 = Assignment(Identifier tempIdentifier, rside)
+                    let assignment2 = Assignment(ALExpression.createIdentifer value,Identifier tempIdentifier)
+                    Sequence(
+                        Block (preceding @ [ assigment1]), // generated statements in block
+                        assignment2)
+                | Types.Double , Types.Int32 ->
+                    let assignment2 = Assignment(ALExpression.createIdentifer value,last |> ALExpression.ofALStatement)
+                    Sequence(
+                        Block (preceding), // generated statements in block
+                        assignment2)
+                | n -> failwith $"unimplemented cast {n}" 
+            
+            assignments 
+        | _ -> failwith "unimplemented cast"
         
-    let isLetExpr (exp:FSharpExpr) =
-        match exp with
-        | FSharpExprPatterns.Let(bindingExpr, nextExpr) ->  true
-        | _ -> false
         
-    let isThis (exp:FSharpExpr) =
-        match exp with
-        | FSharpExprPatterns.Value(valueToGet) ->
-            valueToGet.DisplayName = "this"
-        | _ -> false
-    
     
     
     let rec ofFSharpExpr (b:ALProcedureContext) (exp:FSharpExpr) =
@@ -547,17 +528,14 @@ module ALExpression =
             
         | FSharpExprPatterns.Call(objExprOpt, memberOrFunc, typeArgs1, typeArgs2, argExprs) ->
             let sym_memberOrFunc = memberOrFunc :> FSharpSymbol
-            let d = 5
             if memberOrFunc.IsPropertySetterMethod || memberOrFunc.IsImplicitConstructor then
-                let debug = 5
                 let prop =
                     memberOrFunc.DisplayName
                     |> (fun f -> f.Replace("`",""))
                     |> (fun f -> if f.StartsWith ("set_") then f[4..] else f)
-                    |> Identifier
                 let assignTo =
-                    if isThis objExprOpt.Value
-                    then prop
+                    if ALExpression.isThis objExprOpt.Value
+                    then Identifier prop
                     else
                         let tgt = objExprOpt.Value |> ALExpression.ofFSharpExpr b
                         ALExpression.createMemberAccess tgt prop
@@ -566,12 +544,26 @@ module ALExpression =
                 let stat = Assignment(assignTo,newval)
                 stat |> ALExpression.fromALStatement 
             else
+                
+                let replacementargs =
+                    { context = b.expressionContext
+                      variableDeclarations = b.localVariables
+                      ALFunctionReplacementArgs.toAL = ofFSharpExpr b
+                      objExpr = objExprOpt
+                      funcMember = memberOrFunc
+                      argExprs = argExprs }
+                    
+                // match memberfunctionorvalue
+                match memberOrFunc with
+                | FSharpOperators.HasFSharpOperator b argExprs result -> result
+                | _ -> 
             
-                let rootfullname = memberOrFunc :> FSharpSymbol
-                let f = 5
-            
+                // match member fullname
                 match memberOrFunc.FullName with
-                | TypeReplacements.HasReplacementFunction (ofFSharpExpr b) objExprOpt memberOrFunc argExprs result ->
+                | HasALFunctionReplacement b replacementFn ->
+                    replacementFn replacementargs
+                
+                | ALFunctionReplacements.HasReplacementFunction (ofFSharpExpr b) objExprOpt memberOrFunc argExprs result ->
                     let r = 5
                     let replacement = result (ofFSharpExpr b) objExprOpt memberOrFunc argExprs
                     match replacement with
@@ -589,7 +581,7 @@ module ALExpression =
                     | FSALExpr (InvocationWithoutLastArg (tgt,methodname,args )) ->
                         replacement
                     | _ -> replacement
-                | FSharpOperators.HasFSharpOperator b argExprs result -> result
+                
                 | x when objExprOpt.IsSome ->
                     // TODO: handle new union case
                     // default
@@ -600,8 +592,7 @@ module ALExpression =
                             memberOrFunc.DisplayName
                             |> (fun f -> f.Replace("`",""))
                             |> (fun f -> if f.StartsWith ("get_") then f[4..] else f)
-                            |> Identifier
-                        else Identifier memberOrFunc.DisplayName
+                        else memberOrFunc.DisplayName
                     let args =
                         argExprs
                         |> List.where (fun f ->
@@ -614,7 +605,7 @@ module ALExpression =
                     let handleDefault() =
                         let target = objExprOpt.Value |> ofFSharpExpr b
                         let d = 5
-                        match objExprOpt.Value |> isRefValue, memberOrFunc.IsPropertyGetterMethod, memberOrFunc.IsMemberThisValue with
+                        match objExprOpt.Value |> ALExpression.Value.isReference, memberOrFunc.IsPropertyGetterMethod, memberOrFunc.IsMemberThisValue with
                         | true,_,_ -> target // ref.Value
                         | _, true,true -> ALExpression.createMemberAccess target func // property
                         | _, true,_ -> ALExpression.createMemberAccess target func // property
@@ -629,7 +620,7 @@ module ALExpression =
                             ALExpression.createInvocation memberOrFunc.DisplayName args
                         //                        ALExpression.createMemberAccessInvocation (Identifier "Rec") memberOrFunc.DisplayName args // TODO: only for tables 
                         | true,true ->
-                            func
+                            Identifier func
                         //                        ALExpression.createMemberAccess (Identifier "Rec") func
                         | _ ->  handleDefault()  
                     
@@ -665,7 +656,7 @@ module ALExpression =
                                     let alexp =
                                         ALExpression.createMemberAccess
                                             (Identifier v.DisplayName)
-                                            (Identifier "Count")
+                                            ("Count")
                                     alexp
                                 | _ ->                                 
                              
@@ -692,7 +683,7 @@ module ALExpression =
                             else
                                 let at = Type.GetType(ent.FullName)
                                 let typebyctor = ent.MembersFunctionsAndValues[0]
-                                let gotType = FSharpEntity.tryGetType ent
+                                let gotType = FSharpEntity.tryGetGenericTypeArg ent
                                 let isfstype = gotType |> FSharpType.isInheritedFromALType
                                 Some (ALType.ofFSharpType gotType.Value)
                             
@@ -754,41 +745,33 @@ module ALExpression =
         | FSharpExprPatterns.Coerce(targetType, inpExpr) ->
             // passing lambdas
             let coerc = 1
-            let letBindContext = (ALExprContext.getLetBindingCtx b)
+            let letBindContext = (ALExprContext.getLetBindingCtx b.expressionContext)
             let exp = inpExpr |> ofFSharpExpr b
             match letBindContext,exp with
-            | None, FSALExpr (InvocationWithoutLastArg (Identifier name,methodname,args)) ->
+            | None, FSALExpr (InvocationWithoutLastArg (Identifier reader,methodname,args)) ->
                 let targetJsonProp : string  = args[0] |> ALExpression.getConstValue |> unbox 
-                let intermediaryVarName = ".json." + targetJsonProp + (string b.localVariables.Count)
-                let targetVarName = "@" + targetJsonProp + (string b.localVariables.Count)
+                let v = 1
                 // declare intermediary var
-                {   name = intermediaryVarName
-                    isMutable = false
-                    altype = Simple (SimpleType "JsonToken") } //ALType.ofFSharpType targetType
-                |> b.localVariables.Add
+                let genJsonToken = ALVariable.createGenJsonToken reader targetJsonProp b.localVariables
+                genJsonToken |> b.localVariables.Add
                 // select token to intermediary var
                 let selectToken =
-                    ALExpression.createMemberAccessInvocation (Identifier "_jtoken") methodname (args @ [Identifier intermediaryVarName])
+                    ALExpression.createMemberAccessInvocation (Identifier "_jtoken") methodname (args @ [Identifier genJsonToken.name])
                     |> Expression
                 // declare target var
-                {   name = targetVarName
-                    isMutable = false
-                    altype = ALType.ofFSharpType targetType } //ALType.ofFSharpType targetType
-                |> b.localVariables.Add
+                let genField = ALVariable.createGenField reader targetJsonProp (ALType.ofFSharpType targetType) b.localVariables
+                genField |> b.localVariables.Add
                 // assign var from intermediary
-                let letBindingTypeFullName = (FSharpType.getFullName targetType)
                 let assignmentExpr =
                     Sequence(
                         selectToken,
                         Assignment(
-                            Identifier targetVarName,
-                            JsonTokens.getJsonCastExpr (Identifier intermediaryVarName) letBindingTypeFullName
+                            Identifier genField.name,
+                            JsonTokens.getJsonCastExpr (Identifier genJsonToken.name) targetType
                         )
                     )
                     
-                let vsadsadasd = 1
-                let test = 1
-                Sequence (assignmentExpr,Identifier targetVarName |> ALStatement.ofExpression) |> ALExpression.fromALStatement
+                Sequence (assignmentExpr,Identifier genField.name |> ALStatement.ofExpression) |> ALExpression.fromALStatement
             | Some (letBindVar,bindingKind), FSALExpr (InvocationWithoutTarget (methodname,args)) ->
                 ALProcedureContext.ensureHasJTokenVariable b
 //                response.ReadFrom(json);
@@ -827,12 +810,33 @@ module ALExpression =
                         altype = ALType.ofFSharpType targetType } //ALType.ofFSharpType targetType
                     |> b.localVariables.Add
                     // assign var from intermediary
-                    let letBindingTypeFullName = (FSharpType.getFullName letBindVar.FullType)
                     let assignmentExpr =
-                        Assignment(
-                            Identifier letBindVar.DisplayName,
-                            JsonTokens.getJsonCastExpr (Identifier letBindVarJsonName) letBindingTypeFullName
-                        )
+                        let genType =
+                            targetType
+                            |> FSharpType.tryGetGenericTypeArg
+                            |> Option.map FSharpType.getRootType
+                        
+                        match genType with
+                        // default assignment
+                        | None ->
+                            let t = 1 
+                            Assignment(
+                                Identifier letBindVar.DisplayName,
+                                JsonTokens.getJsonCastExpr (Identifier letBindVarJsonName) (letBindVar.FullType)
+                            )
+                        // jsonArray to list variable
+                        | Some genericType -> 
+                            match genericType |> FSharpType.getFullName with
+                            | Types.String | Types.Int32 | Types.Double ->
+                                // declare string list to collect values
+                                ALStatement.ForeachLoop ((Identifier "_jtoken"),
+                                    ALExpression.createMemberAccessInvocation (Identifier letBindVarJsonName) "AsArray" [],
+                                    ALExpression.createMemberAccessInvocation
+                                        (Identifier letBindVar.DisplayName)
+                                        "Add"
+                                        [ ALExpression.createJsonCastExpr "_jtoken" genType.Value ] 
+                                )
+                            | n -> failwithf $"list of %A{n} not implemented"
                     Sequence (memberAccess,assignmentExpr) |> ALExpression.fromALStatement
                 | _ ->
                 failwith "unimplemented"

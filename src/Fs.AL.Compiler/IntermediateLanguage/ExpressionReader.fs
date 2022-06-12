@@ -3,7 +3,7 @@
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerServices
 open Fs.AL.Compiler.IntermediateLanguage.ALContext
-open Fs.AL.Compiler.IntermediateLanguage.FSharpExpressionsMapping
+open Fs.AL.Compiler.IntermediateLanguage.ALExpressions
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 
 module Debugging =

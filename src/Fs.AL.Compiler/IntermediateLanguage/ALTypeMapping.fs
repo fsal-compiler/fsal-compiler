@@ -13,7 +13,8 @@ module ALType =
     type private t = Fs.AL.Core.ALCoreValues.ALType
     
     let rec ofFSharpType (ftype:FSharpType) =
-        let fullname = ftype |> FSharpType.getFullName
+        let rootType = ftype |> FSharpType.getRootType
+        let fullname = rootType |> FSharpType.getFullName
         match fullname with
         | Operators.ref -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.byref" -> ftype.GenericArguments[0] |> ofFSharpType
@@ -22,6 +23,10 @@ module ALType =
             let arrayof = ftype.GenericArguments[0] |> ofFSharpType
             match arrayof with
             | Simple (SimpleType "JsonToken") -> Simple (SimpleType "JsonArray")
+            | Simple (Char) -> Simple (ALSimpleType.List (ALSimpleType.Char))
+            | Simple (Integer) -> Simple (ALSimpleType.List (ALSimpleType.Integer))
+            | Simple (Decimal) -> Simple (ALSimpleType.List (ALSimpleType.Decimal))
+            | Simple (Text n) -> Simple (ALSimpleType.List (ALSimpleType.Text n))
             | _ -> failwith "unimplemented"
         | "System.Collections.Generic.List" ->
             let listof = ftype.GenericArguments[0] |> ofFSharpType
@@ -53,7 +58,7 @@ module ALType =
             let unioncase = ftype.TypeDefinition.UnionCases
             Simple (SimpleType "JsonToken") // use as json type
         // System.** namespace types
-        | TypeReplacements.HasCoreLibType mapping -> mapping
+        | ALTypeReplacements.HasCoreLibType mapping -> mapping
         // jsonprovider types
         | x when x.StartsWith "Fable.JsonProvider.Generator<...>" -> Simple (SimpleType "JsonToken")
         // edge cases, lambdas, typeprovider types
@@ -70,7 +75,7 @@ module ALType =
                     Simple (SimpleType "FUNCTION") //TODO:
             else failwith $"unhandled typeprovider {x}"
         | x when ftype.BaseType.Value.TypeDefinition.FullName = FSharpType.ALTypeFullNames.record ->
-            let roottype = ftype.TypeDefinition |> FSharpEntity.getRootType
+            let roottype = ftype.TypeDefinition |> FSharpEntity.getRootEntity
             let name = ftype.TypeDefinition.DisplayName
             Complex (Record (roottype |> FSharpEntity.getALCompiledName))
         // just for debugging
@@ -104,6 +109,8 @@ module ALType =
             | Boolean -> nameof Boolean
             | Decimal -> nameof Decimal
             | Code lenOpt -> nameof Code
+            | JsonToken -> nameof JsonToken
+            | JsonArray -> nameof JsonArray
             | List (listparam) ->
                 let lt = 5
                 "ListOf:" + listparam.ToString()

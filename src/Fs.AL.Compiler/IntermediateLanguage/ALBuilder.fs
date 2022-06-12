@@ -1,5 +1,6 @@
 ﻿module rec Fs.AL.Compiler.ALBuilder
 
+open System.Collections.Generic
 open System.Collections.ObjectModel
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerDeclarations
@@ -43,7 +44,8 @@ type ALObjectBuilder with
                 let a = 5
                 args |> Seq.collect id
                 |> Seq.where (fun f ->
-                    f.FullType |> FSharpType.getFullName <> Core.unit)
+                    f.FullType |> FSharpType.getRootFullName <> Core.unit)
+                
             match mem.IsInstanceMember with
             | true -> paramsFlattened |> Seq.skip 1 
             | false -> paramsFlattened
@@ -57,6 +59,7 @@ type ALObjectBuilder with
                 parameters = parameters
                 entity = mem.ApparentEnclosingEntity
                 returnType = returnvalue
+                registeredReplacements = b.registeredFunctionReplacements
             }
       
         let newcontext = ExpressionReader.readProcedureBody procedureBuilder body
@@ -138,7 +141,7 @@ type ALObjectBuilder = {
         alMembers : ALMemberBuilder list
         alFields : ALFieldBuilder list
         mutable nextFieldId : int
-        
+        mutable registeredFunctionReplacements : IDictionary<string,IALFunctionReplacement>
 }
 with
     static member ofEntityWithMembers entityWithMembers = {
@@ -152,6 +155,7 @@ with
         alMembers = [] 
         alFields = []
         nextFieldId = 1
+        registeredFunctionReplacements = Dictionary()
     }
        
     static member withCache (cache:SharedBuilderContext) (b:ALObjectBuilder) =

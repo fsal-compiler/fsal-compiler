@@ -1,5 +1,6 @@
 ﻿module rec Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 
+open System
 open System.Collections.Generic
 open System.Collections.ObjectModel
 open System.Linq
@@ -135,6 +136,7 @@ type ALStatement =
     | IfStatement of guard:ALExpression * ``then``:ALStatement * ``else``:ALStatement option
     // TODO : case, while, repeat, for, with(?), foreach 
     | ForLoop of assignment:ALExpression * exp:ALExpression * doStatement:ALExpression * isUp:bool  
+    | ForeachLoop of identifier:ALExpression * exp:ALExpression * doStatement:ALExpression
     | WhileLoop of guard:ALExpression * doStatement:ALExpression   
     | Exit of value:ALExpression
     with
@@ -155,6 +157,25 @@ type ALStatement =
             | ALStatement.Expression (Constant null) -> false 
             | _ -> true
         )
+        
+    static member sequenceOf (exprs:ALStatement list) =
+        match exprs with
+        | e1::e2::tail ->
+            tail
+            |> List.fold
+                (fun acc f ->
+                    match acc with 
+                    | Sequence(e1',e2') -> 
+                        Sequence(
+                            e1',
+                            Sequence(e2',f)
+                        )
+                    | _ -> failwith "invalid sequence"
+                )
+                (Sequence(e1,e2))
+        | _ -> failwith "invalid sequence"  
+         
+        
         
     static member withAssignmentTarget (targetExp:ALExpression) assignmentStatement =
         match assignmentStatement with
@@ -178,7 +199,7 @@ type ALStatement =
         | Sequence(currSt, nextSt) ->
             let precLeft,lastLeft = ALStatement.collectSequencesLast (currSt) 
             let precRight,lastRight = ALStatement.collectSequencesLast (nextSt)
-            (precLeft@precRight)@ acc,Sequence(lastLeft, lastRight)
+            (precLeft@precRight@[lastLeft])@ acc,lastRight
         | Expression alExpression ->
             acc, Expression alExpression
         | st -> acc, st
@@ -331,52 +352,16 @@ type LetExpressionKind =
     | InsertLetStatement of statement:ALStatement * nextExpr:LetExpressionKind
     | ALStatement of ALStatement
 
-
-
-
-
         
 type ALVariable = {isMutable: bool; name:string ; altype:ALType}
 
 
-module ALExpression =
-    
-    let createBinary targetExpr operator func  =
-        Binary (targetExpr,operator,func)
-    
-    let createMemberAccess targetExpr func  =
-        Binary (targetExpr,ALBinaryOperator.MemberAccess,func)
-    
-    /// e.g. (Identifier <targetName>).<memberName>(args)
-    let createMemberAccessInvocation targetExpr memberName args =
-        NaryExpression (Invocation( Binary (
-            targetExpr,ALBinaryOperator.MemberAccess,Identifier memberName) ,args))
-        
-    /// e.g. <methodName>(args)
-    let createInvocation methodName args =
-        NaryExpression (Invocation(
-            (Identifier methodName),args))
-        
-        
-    module Invocation =
-        let addArgument (arg:ALExpression) (invocExpr:ALExpression) =
-            match invocExpr with
-            | NaryExpression alNaryExpression ->
-                match alNaryExpression with
-                | Invocation(alExpression, alExpressions) ->
-                    Invocation(alExpression,alExpressions @ [arg])
-                    |> NaryExpression
-                | _ -> failwith "unimplemented case"
-            | _ -> failwith "unimplemented case"
-                
-        let changeArgument (arg:ALExpression) (invocExpr:ALExpression) =
-            match invocExpr with
-            | NaryExpression alNaryExpression ->
-                match alNaryExpression with
-                | Invocation(alExpression, alExpressions) ->
-                    Invocation(alExpression,[arg])
-                    |> NaryExpression
-                | _ -> failwith "unimplemented case"
-            | _ -> failwith "unimplemented case"
-                
-                
+/// replace function by fullname
+[<AttributeUsage(AttributeTargets.All,Inherited=true,AllowMultiple=false)>]
+type ALReplaceFunctionAttribute(functionFullname:string) = 
+    inherit System.Attribute()
+    member this.Name : string = ""    
+//"Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray"
+
+
+

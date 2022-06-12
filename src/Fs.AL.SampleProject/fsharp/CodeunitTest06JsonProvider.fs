@@ -2,7 +2,23 @@ module Fs.AL.SampleProject.CodeunitTest06JsonProvider
 
 open Fs.AL.Core.Abstract
 
-type SampleJsonProvider = Fable.JsonProvider.Generator<"""{"firstName":"john","lastName":"smith","age":10}""">
+type SampleJsonProvider = 
+    Fable.JsonProvider.Generator<"""
+{
+    "firstName":"john",
+    "lastName":"smith",
+    "age":10,
+    "children": [
+        "johnny",
+        "timmy",
+        "sam",
+        "donald"
+    ],
+    "favoriteNumbers": [
+        1,54,654,56,2,21
+    ]
+}
+""">
 
 [<ALSingleInstanceCodeunit(60006)>]
 module JsonProvider =
@@ -20,9 +36,15 @@ module JsonProvider =
     let getJsonProp3 (content: string) =
         let token = SampleJsonProvider(content)
         let ageAsDecimal = token.age
-        // let ageAsInteger = int token.age 
-        // let ageAsText = string token.age
-        // let ageIn5Years = ageAsDecimal + 5.
-        // ageAsInteger
+        let ageAsInteger = int token.age 
+        let ageAsText = string token.age
         ageAsDecimal
+
+
+    let getJsonProp4 content =
+        let token = SampleJsonProvider(content)
+        let children = token.children
+        let firstChild = children[0]
+        firstChild
+
 

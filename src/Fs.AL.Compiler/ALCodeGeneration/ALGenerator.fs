@@ -23,128 +23,147 @@ type private sf = Microsoft.Dynamics.Nav.CodeAnalysis.SyntaxFactory
 type private sk = Microsoft.Dynamics.Nav.CodeAnalysis.SyntaxKind
 
 
-let rec buildUnaryExpression (op,a1) : CodeExpressionSyntax =
-    match op with
-    | Not ->
-        let innerExp = a1 |> buildExpression :?> CodeExpressionSyntax
-        let notexp =
-            sf.UnaryExpression(SyntaxKind.UnaryNotExpression,innerExp)
-                .WithOperatorToken(sf.Token(sk.NotKeyword).WithTrailingTrivia(sf.Space))
-        notexp
-    | Grouping ->
-        let innerExp = a1 |> buildExpression :?> CodeExpressionSyntax
-        sf.ParenthesizedExpression(innerExp)
-    | x -> failwithf $"%A{x}"
-    
-let rec buildBinaryExpression (a1,op,a2) : CodeExpressionSyntax =
-    let exp1 = a1 |> buildExpression :?> CodeExpressionSyntax 
-    let exp2 = a2 |> buildExpression :?> CodeExpressionSyntax
-    match op with
-    | MemberAccess -> sf.MemberAccessExpression(exp1,exp2 :?> IdentifierNameSyntax)
-    | _ ->
-    match op with
-    | Add -> sf.BinaryExpression(sk.AddExpression,exp1,exp2)
-    | Subtract -> sf.BinaryExpression(sk.SubtractExpression,exp1,exp2)
-    | Multiply -> sf.BinaryExpression(sk.MultiplyExpression,exp1,exp2)
-    | Divide -> sf.BinaryExpression(sk.DivideExpression,exp1,exp2)
-    | Mod -> sf.BinaryExpression(sk.ModuloExpression,exp1,exp2)
-    | Equals -> sf.BinaryExpression(sk.EqualsExpression,exp1,exp2)
-    | NotEquals -> sf.BinaryExpression(sk.NotEqualsExpression,exp1,exp2)
-    | GreaterThan -> sf.BinaryExpression(sk.GreaterThanExpression,exp1,exp2)
-    | GreaterThanOrEqual -> sf.BinaryExpression(sk.GreaterThanOrEqualExpression,exp1,exp2)
-    | LessThan -> sf.BinaryExpression(sk.LessThanExpression,exp1,exp2)
-    | LessThanOrEqual -> sf.BinaryExpression(sk.LessThanOrEqualExpression,exp1,exp2)
-    | OR -> sf.BinaryExpression(sk.LogicalOrExpression,exp1,exp2)
-    | AND -> sf.BinaryExpression(sk.LogicalAndExpression,exp1,exp2)
-    | XOR -> sf.BinaryExpression(sk.LogicalXorExpression,exp1,exp2)
-    | Range -> sf.BinaryExpression(sk.RangeExpression,exp1,exp2)
-    | x -> failwithf $"%A{x}"
-    |> (fun f -> f.WithOperatorToken(f.OperatorToken.WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space)))
+module GenALExpression =
 
-let rec buildNaryExpression (exp:ALNaryExpression) =
-    let nar = 5
-    match exp with
-    | Invocation(alExpression, alExpressions) ->
-        let tgt = alExpression |> buildExpression :?> CodeExpressionSyntax
-        let args =
-            alExpressions
-            |> List.map (fun f -> buildExpression f :?> CodeExpressionSyntax)
-        let separatedSyntaxList = SeparatedSyntaxList()
-        match args with
-        | [] -> sf.InvocationExpression(tgt)
-        | _ -> 
-            let newl = separatedSyntaxList.AddRange(args)
-            let nal = sf.ArgumentList(newl)
-            sf.InvocationExpression(tgt,nal)
         
-    | x -> failwithf $"%A{x}"
-    
-    
+        
+    let rec buildUnaryExpression (op,a1) : CodeExpressionSyntax =
+        match op with
+        | Not ->
+            let innerExp = a1 |> buildExpression :?> CodeExpressionSyntax
+            let notexp =
+                sf.UnaryExpression(SyntaxKind.UnaryNotExpression,innerExp)
+                    .WithOperatorToken(sf.Token(sk.NotKeyword).WithTrailingTrivia(sf.Space))
+            notexp
+        | Grouping ->
+            let innerExp = a1 |> buildExpression :?> CodeExpressionSyntax
+            sf.ParenthesizedExpression(innerExp)
+        | x -> failwithf $"%A{x}"
+        
+    let buildBinaryExpression (a1,op,a2) : CodeExpressionSyntax =
+        let exp1 = a1 |> buildExpression :?> CodeExpressionSyntax 
+        let exp2 = a2 |> buildExpression :?> CodeExpressionSyntax
+        match op with
+        | MemberAccess -> sf.MemberAccessExpression(exp1,exp2 :?> IdentifierNameSyntax)
+        | _ ->
+        match op with
+        | Add -> sf.BinaryExpression(sk.AddExpression,exp1,exp2)
+        | Subtract -> sf.BinaryExpression(sk.SubtractExpression,exp1,exp2)
+        | Multiply -> sf.BinaryExpression(sk.MultiplyExpression,exp1,exp2)
+        | Divide -> sf.BinaryExpression(sk.DivideExpression,exp1,exp2)
+        | Mod -> sf.BinaryExpression(sk.ModuloExpression,exp1,exp2)
+        | Equals -> sf.BinaryExpression(sk.EqualsExpression,exp1,exp2)
+        | NotEquals -> sf.BinaryExpression(sk.NotEqualsExpression,exp1,exp2)
+        | GreaterThan -> sf.BinaryExpression(sk.GreaterThanExpression,exp1,exp2)
+        | GreaterThanOrEqual -> sf.BinaryExpression(sk.GreaterThanOrEqualExpression,exp1,exp2)
+        | LessThan -> sf.BinaryExpression(sk.LessThanExpression,exp1,exp2)
+        | LessThanOrEqual -> sf.BinaryExpression(sk.LessThanOrEqualExpression,exp1,exp2)
+        | OR -> sf.BinaryExpression(sk.LogicalOrExpression,exp1,exp2)
+        | AND -> sf.BinaryExpression(sk.LogicalAndExpression,exp1,exp2)
+        | XOR -> sf.BinaryExpression(sk.LogicalXorExpression,exp1,exp2)
+        | Range -> sf.BinaryExpression(sk.RangeExpression,exp1,exp2)
+        | x -> failwithf $"%A{x}"
+        |> (fun f -> f.WithOperatorToken(f.OperatorToken.WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space)))
 
-let rec buildExpression (exp:ALExpression) : ExpressionSyntax =
-    match exp with
-    | FSALExpr (StatementExpr (Expression alExpression)) ->
-        buildExpression alExpression
-    | NaryExpression naryExp ->
-        let alexp = naryExp |> buildNaryExpression
-        alexp :> ExpressionSyntax
-    | Binary (a1,op,a2) ->
-        (a1,op,a2) |> buildBinaryExpression :> ExpressionSyntax
-    | Identifier s ->
-        sf.IdentifierName(s)
-    | Constant o ->
-        match o with
-        | null -> null
-        | :? int as v -> 
-            sf.Literal(v)
-            |> sf.Int32SignedLiteralValue
-            |> sf.LiteralExpression
-            :> ExpressionSyntax
-        | :? bool as v ->
-            let lit =
-                if v then sf.BooleanLiteralValue(sf.Token(sk.TrueKeyword))
-                else sf.BooleanLiteralValue(sf.Token(sk.FalseKeyword))
-            lit
-            |> sf.LiteralExpression
-            :> ExpressionSyntax
-        | :? string as v ->
-            sf.Literal(v)
-            |> sf.StringLiteralValue
-            |> sf.LiteralExpression
-            :> ExpressionSyntax
-        | :? double as v ->
-            let token =  v.ToString($"{0:D}",CultureInfo.InvariantCulture) |> sf.ParseToken
-            match token.Kind with
-            | SyntaxKind.DecimalLiteralToken ->
-                sf.DecimalSignedLiteralValue(token)
-                |> sf.LiteralExpression
-                :> ExpressionSyntax
-            | SyntaxKind.Int32LiteralToken ->
-                token
+    let rec buildNaryExpression (exp:ALNaryExpression) =
+        let nar = 5
+        match exp with
+        | Invocation(alExpression, alExpressions) ->
+            let tgt = alExpression |> buildExpression :?> CodeExpressionSyntax
+            let args =
+                alExpressions
+                |> List.map (fun f -> buildExpression f :?> CodeExpressionSyntax)
+            let separatedSyntaxList = SeparatedSyntaxList()
+            match args with
+            | [] -> sf.InvocationExpression(tgt)
+            | _ -> 
+                let newl = separatedSyntaxList.AddRange(args)
+                let nal = sf.ArgumentList(newl)
+                sf.InvocationExpression(tgt,nal)
+            
+        | x -> failwithf $"%A{x}"
+        
+        
+
+    let rec buildExpression (exp:ALExpression) : ExpressionSyntax =
+        match exp with
+        | FSALExpr (StatementExpr (Expression alExpression)) ->
+            buildExpression alExpression
+        | NaryExpression naryExp ->
+            let alexp = naryExp |> buildNaryExpression
+            alexp :> ExpressionSyntax
+        | Binary (a1,op,a2) ->
+            (a1,op,a2) |> buildBinaryExpression :> ExpressionSyntax
+        | Identifier s ->
+            sf.IdentifierName(s)
+        | Constant o ->
+            match o with
+            | null -> null
+            | :? int as v -> 
+                sf.Literal(v)
                 |> sf.Int32SignedLiteralValue
                 |> sf.LiteralExpression
                 :> ExpressionSyntax
-            | _ -> failwith "unknown token"
-        | _ ->
-            sf.Literal(o :?> string)
-            |> sf.StringLiteralValue
-            |> sf.LiteralExpression
-            :> ExpressionSyntax
-    | UnaryExp (op,a1) ->
-        let alExp = (op,a1) |> buildUnaryExpression
-        alExp
-    | FSharpLambda(newVariable, alExpression) ->
-        buildExpression alExpression
-    | x -> failwithf $"%A{x}"        
+            | :? bool as v ->
+                let lit =
+                    if v then sf.BooleanLiteralValue(sf.Token(sk.TrueKeyword))
+                    else sf.BooleanLiteralValue(sf.Token(sk.FalseKeyword))
+                lit
+                |> sf.LiteralExpression
+                :> ExpressionSyntax
+            | :? string as v ->
+                sf.Literal(v)
+                |> sf.StringLiteralValue
+                |> sf.LiteralExpression
+                :> ExpressionSyntax
+            | :? double as v ->
+                let token =  v.ToString($"{0:D}",CultureInfo.InvariantCulture) |> sf.ParseToken
+                match token.Kind with
+                | SyntaxKind.DecimalLiteralToken ->
+                    sf.DecimalSignedLiteralValue(token)
+                    |> sf.LiteralExpression
+                    :> ExpressionSyntax
+                | SyntaxKind.Int32LiteralToken ->
+                    token
+                    |> sf.Int32SignedLiteralValue
+                    |> sf.LiteralExpression
+                    :> ExpressionSyntax
+                | _ -> failwith "unknown token"
+            | _ ->
+                sf.Literal(o :?> string)
+                |> sf.StringLiteralValue
+                |> sf.LiteralExpression
+                :> ExpressionSyntax
+        | UnaryExp (op,a1) ->
+            let alExp = (op,a1) |> buildUnaryExpression
+            alExp
+        | FSharpLambda(newVariable, alExpression) ->
+            buildExpression alExpression
+        | x -> failwithf $"%A{x}"        
 
 
 /// map expressions from intermediate language to AL 
-module ALStatementImpl =
+module GenALStatement =
+    
+    let foreachStatement level identifier container doStatement =
+        let gen_identifier  = identifier |> GenALExpression.buildExpression :?> IdentifierNameSyntax
+        let gen_container = container |> GenALExpression.buildExpression :?> CodeExpressionSyntax
+        let gen_do_statement =
+            doStatement |> ALStatement.ofExpression
+            |> GenALStatement.ofALStatement (level+1)
+        let statement =
+            sf.ForEachStatement(gen_identifier,gen_container,gen_do_statement)
+                .WithForEachKeywordToken(sf.Token(sk.ForEachKeyword) |> t.wtst)
+                .WithInKeywordToken(sf.Token(sk.InKeyword) |> t.wlst |> t.wtst)
+                .WithDoKeywordToken(sf.Token(sk.DoKeyword) |> t.wlst)
+        statement
     
     
+    let ofALStatement level (alStatement:ALStatement) =
+        buildStatements level [] [alStatement] |> List.head
     
     let createExit (fsalStatement:ALExpression) =
-        let alexp = fsalStatement |> buildExpression :?> CodeExpressionSyntax
+        let alexp = fsalStatement |> GenALExpression.buildExpression :?> CodeExpressionSyntax
         let exitstatement =
             sf.ExitStatement(alexp)
                 .WithOpenParenthesisToken(sf.Token(sk.OpenParenToken))
@@ -157,8 +176,8 @@ module ALStatementImpl =
         // todo: unwrap assignment trees
         match expression with
         | FSALExpr (StatementExpr (Assignment(origtgt, value))) ->
-            let target = assignedTo |> buildExpression :?> CodeExpressionSyntax
-            let assignedvalue = value |> buildExpression :?> CodeExpressionSyntax
+            let target = assignedTo |> GenALExpression.buildExpression :?> CodeExpressionSyntax
+            let assignedvalue = value |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let assignStatement =
                 sf.AssignmentStatement(target,assignedvalue)
                     .WithAssignmentToken(sf.Token(sk.AssignToken).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
@@ -168,10 +187,10 @@ module ALStatementImpl =
         | FSALExpr (StatementExpr (state)) ->
             let preceding,last = ALStatement.collectSequencesLast state
             let dfdfg = 5
-            let target = assignedTo |> buildExpression :?> CodeExpressionSyntax
+            let target = assignedTo |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let assignedvalue =
                 match expression with
-                | _ -> expression |> buildExpression :?> CodeExpressionSyntax
+                | _ -> expression |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let assignStatement =
                 sf.AssignmentStatement(target,assignedvalue)
                     .WithAssignmentToken(sf.Token(sk.AssignToken).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
@@ -180,10 +199,10 @@ module ALStatementImpl =
             assignStatement
         | _ ->
             
-            let target = assignedTo |> buildExpression :?> CodeExpressionSyntax
+            let target = assignedTo |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let assignedvalue =
                 match expression with
-                | _ -> expression |> buildExpression :?> CodeExpressionSyntax
+                | _ -> expression |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let assignStatement =
                 sf.AssignmentStatement(target,assignedvalue)
                     .WithAssignmentToken(sf.Token(sk.AssignToken).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Space))
@@ -194,9 +213,9 @@ module ALStatementImpl =
         match fsalExpr with
         | FSALExpr (StatementExpr (Sequence(alStatement, statement))) ->
             let preceding,last =  ALStatement.collectSequencesLast (Sequence(alStatement, statement))
-            (ALUnaryOperator.Grouping, ALExpression.ofALStatement last) |> buildUnaryExpression, (preceding |> buildStatements (level) [])
+            (ALUnaryOperator.Grouping, ALExpression.ofALStatement last) |> GenALExpression.buildUnaryExpression, (preceding |> buildStatements (level) [])
         | n ->
-            (ALUnaryOperator.Grouping,n) |> buildUnaryExpression, []
+            (ALUnaryOperator.Grouping,n) |> GenALExpression.buildUnaryExpression, []
             
     let createBlock level (statements:StatementSyntax list) =
         let leveltrivia = [| for i = 0 to level do t._4spaces |] |> Array.concat
@@ -240,7 +259,7 @@ module ALStatementImpl =
 
             | Block alStatements,_ ->
                 let statements = alStatements |> buildStatements (level+2) []
-                let block = ALStatementImpl.createBlock (level+1) statements
+                let block = GenALStatement.createBlock (level+1) statements
 //                let stat = ALStatementImpl.createBlock (level+1) alStatements
 //                let st  =
 //                    [Block alStatements] |> buildStatements (level+1) []
@@ -250,18 +269,18 @@ module ALStatementImpl =
                 | Some _ -> block.WithSemicolonToken(sf.Token(sk.None))
                 | None -> block
             | Expression e, _ ->
-                let expr = e |> buildExpression :?> CodeExpressionSyntax
+                let expr = e |> GenALExpression.buildExpression :?> CodeExpressionSyntax
                 match elseExpOpt with
                 | Some _ ->  sf.ExpressionStatement(expr)
                 | None -> sf.ExpressionStatement(expr).WithSemicolonToken(sf.Token(sk.SemicolonToken))
                 |> (fun f -> f.WithTrailingTrivia(sf.Space))
                 |> (fun f -> f.WithLeadingTrivia(Array.append [|sf.Linefeed;sf.Linefeed|] t.lf12spaces))
             | Assignment(assignedTo, expression),Some _ ->
-                (ALStatementImpl.createAssignment (level + 1) (assignedTo,expression)).WithSemicolonToken(sf.Token(sk.None))
+                (GenALStatement.createAssignment (level + 1) (assignedTo,expression)).WithSemicolonToken(sf.Token(sk.None))
             | Assignment(assignedTo, expression),None ->
-                ALStatementImpl.createAssignment (level + 1) (assignedTo,expression)
+                GenALStatement.createAssignment (level + 1) (assignedTo,expression)
             | Exit (ifx),elsex ->
-                let exit1 = ALStatementImpl.createExit ifx
+                let exit1 = GenALStatement.createExit ifx
                 match elsex with
                 | Some _ -> exit1.WithSemicolonToken(sf.Token(sk.None))
                 | None -> exit1
@@ -273,7 +292,7 @@ module ALStatementImpl =
                 let st = [alStatement] |> buildStatements (level + 1) []
                 st[0]
             | Expression e ->
-                let exp = e |> buildExpression :?> CodeExpressionSyntax
+                let exp = e |> GenALExpression.buildExpression :?> CodeExpressionSyntax
                 let st = exp |> sf.ExpressionStatement
                 st.WithSemicolonToken(sf.Token(sk.SemicolonToken))
             | Assignment(assignedTo, FSALExpr(StatementExpr (IfStatement(guard, th, els)))) ->
@@ -289,9 +308,9 @@ module ALStatementImpl =
                 | _ -> failwith ""
             
             | Assignment(assignedTo, expression) ->
-                ALStatementImpl.createAssignment (level + 1) (assignedTo,expression)
+                GenALStatement.createAssignment (level + 1) (assignedTo,expression)
             | Exit (elsex) ->
-                let exit2 = ALStatementImpl.createExit elsex
+                let exit2 = GenALStatement.createExit elsex
                 exit2
             | _ -> failwithf $"unhandled case"
         )
@@ -313,7 +332,7 @@ module ALStatementImpl =
         match precedingStatements with
         | [] -> statement
         | _ ->
-            ALStatementImpl.createBlock (level)
+            GenALStatement.createBlock (level)
                 (precedingStatements @ [statement])
 
 let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALStatement list) : StatementSyntax list =
@@ -342,11 +361,11 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
 //                let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
                 buildStatements level (buildstat::acc) tail
             | NaryExpression alNaryExpression ->
-                let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
+                let ALexp = GenALExpression.buildExpression fsalExp :?> CodeExpressionSyntax
                 let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
                 buildStatements level (statement::acc) tail
             | Binary (left,op,right) ->
-                let ALexp = buildExpression fsalExp :?> CodeExpressionSyntax
+                let ALexp = GenALExpression.buildExpression fsalExp :?> CodeExpressionSyntax
                 let statement = sf.ExpressionStatement(ALexp).WithSemicolonToken(sf.Token(sk.SemicolonToken)) :> StatementSyntax
                 buildStatements level (statement::acc) tail
             | Identifier s -> buildStatements level (sf.ExpressionStatement(sf.IdentifierName "BUG")::acc) tail
@@ -364,26 +383,26 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
             match alStatement with
             | IfStatement(guard, thenExp, elseExpOpt) ->
                 let statement = 
-                    ALStatementImpl.createIfElse
+                    GenALStatement.createIfElse
                        0
                        guard
                        (Assignment(alExpression,ALExpression.ofALStatement thenExp))
                        (elseExpOpt |> Option.map (fun f -> Assignment(alExpression, f |> ALExpression.ofALStatement)))
                 buildStatements level (statement::acc) tail
             | Expression (Constant o) ->
-                let statement = ALStatementImpl.createAssignment level (alExpression,Constant o)
+                let statement = GenALStatement.createAssignment level (alExpression,Constant o)
                 buildStatements level (statement::acc) tail
             | _ -> failwith "unhandled case"
             
         | Assignment(alExpression, expression) ->
             let t = 5
-            let statement = ALStatementImpl.createAssignment level (alExpression,expression)
+            let statement = GenALStatement.createAssignment level (alExpression,expression)
             buildStatements level (statement::acc) tail
         | IfStatement(guard, thenExp, elseExpOpt) ->
-            let statement = ALStatementImpl.createIfElse level guard thenExp elseExpOpt            
+            let statement = GenALStatement.createIfElse level guard thenExp elseExpOpt            
             buildStatements level (statement::acc) tail
         | Exit alExpression ->
-            let alexp = alExpression |> buildExpression :?> CodeExpressionSyntax
+            let alexp = alExpression |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let exitstatement =
                 sf.ExitStatement(alexp)
                     .WithOpenParenthesisToken(sf.Token(sk.OpenParenToken))
@@ -397,7 +416,7 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
                 | FSALExpr (StatementExpr alStatement) ->
                     match alStatement with
                     | Assignment(alExpression, expression) -> 
-                        ALStatementImpl.createAssignment level (alExpression,expression)
+                        GenALStatement.createAssignment level (alExpression,expression)
                     | _ -> failwith "invalid statement"
                 | _ -> failwith "invalid statement"
             
@@ -411,7 +430,7 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
                     |> sf.Int32SignedLiteralValue
                     |> sf.LiteralExpression
                 | _ -> failwith ""
-            let l4_end = buildExpression endval :?> CodeExpressionSyntax
+            let l4_end = GenALExpression.buildExpression endval :?> CodeExpressionSyntax
             let statement =        
                 sf.ForStatement(
                     loopvar |> (t.wls >> t.wts),
@@ -421,7 +440,7 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
                     doStatementExpanded |> (t.wls >> t.wts))
             buildStatements level (statement::acc) tail
         | WhileLoop(fsal_guard, fsal_do) ->
-            let al_guard = fsal_guard |> buildExpression :?> CodeExpressionSyntax
+            let al_guard = fsal_guard |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let al_do =
                 fsal_do |> ALStatement.ofExpression
                 |> (fun f -> buildStatements level [] [f] )
@@ -451,6 +470,9 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
                     .WithEndKeywordToken(sf.Token(sk.EndKeyword).WithLeadingTrivia(Trivia.lf8spaces))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
             buildStatements level (statement::acc) tail
+        | ForeachLoop(identif, container, doStatement) ->
+            let statement = GenALStatement.foreachStatement level identif container doStatement
+            buildStatements level (statement::acc) tail
         | x -> failwithf $"%A{x}"
     
 
@@ -472,7 +494,7 @@ module Members =
                 |> List.rev
                 
             let parameters = b.parameters |> ParameterList.create
-            let procbody = ALStatementImpl.createBlock -1 statements |> (fun f -> f.WithTrailingTrivia(sf.Linefeed))
+            let procbody = GenALStatement.createBlock -1 statements |> (fun f -> f.WithTrailingTrivia(sf.Linefeed))
             Procedure.create b.identifier parameters variables procbody b.returnType
        
     let createField (builder:ALFieldBuilder) : FieldSyntax =
