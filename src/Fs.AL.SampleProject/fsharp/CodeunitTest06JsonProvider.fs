@@ -7,12 +7,9 @@ type SampleJsonProvider =
 {
     "firstName":"john",
     "lastName":"smith",
-    "age":10,
+    "age":100,
     "children": [
-        "johnny",
-        "timmy",
-        "sam",
-        "donald"
+        "johnny", "timmy", "sam", "donald"
     ],
     "favoriteNumbers": [
         1,54,654,56,2,21
@@ -22,7 +19,6 @@ type SampleJsonProvider =
 
 [<AL.Codeunit(60006)>]
 module JsonProvider =
-    do()
     let getJsonProp1 (content: string)  = 
         let reader = SampleJsonProvider(content)
         let fname = reader.firstName
