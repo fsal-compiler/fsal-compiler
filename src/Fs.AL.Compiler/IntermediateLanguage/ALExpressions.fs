@@ -174,10 +174,15 @@ module FSALExpression =
                     match symbol with
                     | FSharpSymbol.IsTypeCast ->
                         let v1 = 1
-                        let exp = argExprs[0] |> ALExpression.ofFSharpExpr b
+                        let expkind = LetExprKind.TypeProvider (memberOrFunc,typeArgs2[0],argExprs)
+//                        let result = ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,expkind)) b.expressionContext (fun f ->
+                        let exp =  argExprs[0] |> ALExpression.ofFSharpExpr b
                         let castFrom = typeArgs2[0] |> FSharpType.getRootType
                         let castTo = letBindingVar.FullType |> FSharpType.getRootType
                         let casted = ALExpression.handleTypeCast b castFrom castTo exp letBindingVar
+//                        casted
+//                        )
+                        let t2 = 1
                         LetExprKind.Override ,casted |> ALExpression.fromALStatement
                         
                         
@@ -208,7 +213,7 @@ module FSALExpression =
                         match xprt with
                         | FSALExpr (InvocationWithoutTarget (methodname,args)) ->
                             let idf = ALExpression.createIdentifer letBindingVar
-                            LetExprKind.Override, ALExpression.createMemberAccessInvocation idf methodname args
+                            expkind, ALExpression.createMemberAccessInvocation idf methodname args
                         | _ -> raise (NotImplementedException()) 
                         
                     | _ ->   
@@ -828,7 +833,7 @@ module ALExpression =
                 genJsonToken |> b.localVariables.Add
                 // select token to intermediary var
                 let selectToken =
-                    ALExpression.createMemberAccessInvocation (Identifier "_jtoken") methodname (args @ [Identifier genJsonToken.name])
+                    ALExpression.createMemberAccessInvocation (Identifier reader) methodname (args @ [Identifier genJsonToken.name])
                     |> Expression
                 // declare target var
                 let genField = ALVariable.createGenField reader targetJsonProp (ALType.ofFSharpType targetType) b.localVariables
@@ -846,7 +851,6 @@ module ALExpression =
                 Sequence (assignmentExpr,Identifier genField.name |> ALStatement.ofExpression) |> ALExpression.fromALStatement
             | Some (letBindVar,bindingKind), FSALExpr (InvocationWithoutTarget (methodname,args)) ->
                 ALProcedureContext.ensureHasJTokenVariable b
-                failwith "/////"
                 let statement =
                     match bindingKind with
                     | LetExprKind.TypeProvider(memberOrFunctionOrValue, targetType, exprs) ->

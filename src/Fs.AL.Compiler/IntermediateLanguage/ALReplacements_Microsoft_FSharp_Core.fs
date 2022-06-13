@@ -10,22 +10,20 @@ open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.ALSimpleValues
 
+/// "Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray"
 let GetArray = 
-    //"Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray"
+    
     { new IALFunctionReplacement with
         member this.FunctionName = "Microsoft.FSharp.Core.LanguagePrimitives.IntrinsicFunctions.GetArray"
         member this.Replacement =
-            (fun rargs ->
-                
-                
-                
-                match rargs.argExprs[0],rargs.argExprs[1] with
+            (fun ctx ->
+                match ctx.argExprs[0],ctx.argExprs[1] with
                 | FSharpExprPatterns.Value(v), get_idx ->
                     let vtype = v.FullType |> FSharpType.tryGetGenericTypeArg |> Option.map (FSharpType.getRootType)
                     let vtypefullname =  vtype |> Option.map FSharpType.getFullName
                     match vtypefullname with
                     | Some Types.String | Some Types.Double | Some Types.Int32 ->
-                        let onebasedIndex = get_idx |> rargs.toAL |> ALExpression.convertTo1BasedIndex 
+                        let onebasedIndex = get_idx |> ctx.toAL |> ALExpression.convertTo1BasedIndex 
                         let idf = ALExpression.createIdentifer v
                         ALExpression.createMemberAccessInvocation idf "Get" [onebasedIndex]
                     | Some t ->
@@ -34,9 +32,9 @@ let GetArray =
                         match genfstype with
                         | Simple JsonToken ->
                             let idf = ALExpression.createIdentifer v
-                            let zerobasedIndex = get_idx |> rargs.toAL
+                            let zerobasedIndex = get_idx |> ctx.toAL
                             
-                            match ALExprContext.getLetBindingCtx rargs.context with
+                            match ALExprContext.getLetBindingCtx ctx.context with
                             | None -> raise (NotImplementedException()) 
                             | Some (assignTo,LetExprKind.TypeProvider _) ->
                                 let v = 1
@@ -55,19 +53,19 @@ let GetArray =
                     
                 | FSharpExprPatterns.Coerce(targetType, inpExpr), FSharpExprPatterns.Const(idx,_) ->
                     let vtx = 1
-                    let (letBindVal,letBindValExpr) = (ALExprContext.getLetBindingCtx rargs.context).Value
-                    let t = inpExpr |> rargs.toAL // selectToken 'nicknames'
+                    let (letBindVal,letBindValExpr) = (ALExprContext.getLetBindingCtx ctx.context).Value
+                    let t = inpExpr |> ctx.toAL // selectToken 'nicknames'
                     match t with
                     | FSALExpr (InvocationWithoutLastArg (Identifier target,methodname,args)) ->
                         let targetJsonProp : string  = args[0] |> ALExpression.getConstValue |> unbox 
-                        let jVarName = $".{target}.{targetJsonProp}Token@{rargs.variableDeclarations.Count}" 
-                        let jArrayVarName = $".{target}.{targetJsonProp}Array@{rargs.variableDeclarations.Count}" 
+                        let jVarName = $".{target}.{targetJsonProp}Token@{ctx.variableDeclarations.Count}" 
+                        let jArrayVarName = $".{target}.{targetJsonProp}Array@{ctx.variableDeclarations.Count}" 
                         // declare intermediary variables
                         [
                             ALVariable.createSimple jVarName JsonToken    
                             ALVariable.createSimple jArrayVarName JsonArray    
                         ]
-                        |> List.iter rargs.variableDeclarations.Add
+                        |> List.iter ctx.variableDeclarations.Add
                         
 
                         let allExpressions =

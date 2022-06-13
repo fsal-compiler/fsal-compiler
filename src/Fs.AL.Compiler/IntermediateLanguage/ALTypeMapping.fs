@@ -30,6 +30,7 @@ module ALType =
         let debug = 1
         
         match fullname with
+        | "Fable.JsonProvider.Generator<...>" -> Simple JsonToken
         | Operators.ref -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.byref" -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.Ref" -> ftype.GenericArguments[0] |> ofFSharpType
@@ -75,7 +76,7 @@ module ALType =
         // System.** namespace types
         | ALTypeReplacements.HasCoreLibType mapping -> mapping
         // jsonprovider types
-        | x when x.StartsWith "Fable.JsonProvider.Generator<...>" -> Simple JsonToken
+        
         | x ->
             raise (NotImplementedException(x))
         

@@ -185,7 +185,7 @@ type ALJsonObject() =
 
     member this.Get (key:string,value:byref<ALJsonToken>) : bool = failwith "todo" 
 
-    member this.Add (key:string,value:ALJsonToken) : bool = failwith "todo" 
+    member this.Add (key:string,value:'t) : bool = failwith "todo" 
 
     member this.Remove (key:string) : bool = failwith "todo" 
 

@@ -32,6 +32,7 @@ let ``JsonProvider.jsonParse`` =
         member this.FunctionName = "Fable.JsonProvider.jsonParse"
         member this.Replacement =
             (fun rargs ->
+                let t = 1
                 //a.SelectToken('something',outputvar)
                 ("ReadFrom",rargs.argExprs |> List.map rargs.toAL)
                 |> InvocationWithoutTarget

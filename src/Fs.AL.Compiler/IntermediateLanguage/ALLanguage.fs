@@ -282,20 +282,7 @@ type ALStatement =
             | Expression (Identifier s) ->
                 Sequence(curr2,(Exit(Identifier s)))
             | _ -> failwith "unimplemented exit condition"
-            
-//    static member unwrapSequence (coll:ObservableCollection<ALStatement>) (fsalExp:ALStatement list) =
-//        match fsalExp with
-//        | [] -> coll
-//        | Sequence(curr, next) :: tail ->
-//             coll.Add(curr)
-//             let coll1 = ALStatement.unwrapSequence coll [next]
-//             let coll2 = ALStatement.unwrapSequence coll1 tail
-//             coll2
-//        | head :: tail ->
-//            coll.Add(head)
-//            let coll1 = ALStatement.unwrapSequence coll tail
-//            coll1
-//            
+
     static member withExit last : ALStatement =
         let debug = 5
         let upd =
@@ -342,20 +329,13 @@ type ALStatement =
 //            Sequence(curr2,(Exit(Identifier s)))
 //        | _ -> failwith "unimplemented exit condition"
         
-type ALComplexType =
-    | TODO
-    
-    
-
 type LetExpressionKind =
     | ExplicitVariableDeclaration of isref:bool * varname:string * vartype:ALType
     | VariableAssignment of varname:string * vartype:ALType * statement:ALStatement
     | InsertLetStatement of statement:ALStatement * nextExpr:LetExpressionKind
     | ALStatement of ALStatement
 
-        
 type ALVariable = {isMutable: bool; name:string ; altype:ALType}
-
 
 /// replace function by fullname
 [<AttributeUsage(AttributeTargets.All,Inherited=true,AllowMultiple=false)>]

@@ -4,7 +4,7 @@
         <OutputType>Library</OutputType>
         <TargetFramework>net6.0</TargetFramework>
         <PackageOutputPath>../../nupkg</PackageOutputPath>
-        <Version>1.0.4</Version>
+        <Version>1.0.5</Version>
     </PropertyGroup>
 
     <ItemGroup>

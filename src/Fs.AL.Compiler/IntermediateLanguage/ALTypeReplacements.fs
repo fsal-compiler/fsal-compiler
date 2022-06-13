@@ -33,7 +33,7 @@ let (|HasCoreLibType|_|) (s:string) =
 
 
 let (|HasSupportedCoreLibType|_|) (s:FSharpType) =  
-    let fullname = s.TypeDefinition.FullName
+    let fullname = (s.TypeDefinition:> FSharpSymbol).FullName
     SupportedCoreLibTypes
     |> Array.tryFind (fun (name,rep) -> name = fullname)
     |> Option.map snd
