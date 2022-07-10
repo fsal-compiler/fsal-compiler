@@ -1,5 +1,6 @@
 ﻿module rec Fs.AL.Compiler.ALCodeGeneration.ALGenerator
 
+open System
 open System.Collections.ObjectModel
 open System.Globalization
 open System.IO
@@ -218,12 +219,49 @@ module GenALStatement =
         | n ->
             (ALUnaryOperator.Grouping,n) |> GenALExpression.buildUnaryExpression, []
             
+    
+            
     let createBlock level (statements:StatementSyntax list) =
-        let leveltrivia = [| for i = 0 to level do t._4spaces |] |> Array.concat
-        let blocklevel = Array.append t.lf4spaces leveltrivia
-        let sl = sf.List(statements)
+        let getleveltrivia n = [| for i = 0 to n do t._4spaces |] |> Array.concat
+        let blocklevel = Array.append t.lf4spaces (getleveltrivia level)
+        
+        let containsWhile =
+            statements |> List.exists (fun f -> match f with | :? WhileStatementSyntax -> true | _ -> false)
+        if containsWhile then
+            let d = 1
+            ()
+        // fix inner statements tab level // TODO: refactor to recursive
+        let fixedStatements =
+            statements
+            |> List.map (fun f ->
+                match f with
+                | :? WhileStatementSyntax as v ->
+                    match v.Statement with
+                    | :? BlockSyntax as vb ->
+                        let newStatements = vb.Statements |> Seq.map (fun g ->
+                            match g with
+                            | :? BlockSyntax as vb2 ->
+                                vb2.Statements |> Seq.map (fun vb2f ->
+                                    let tr1 = getleveltrivia -1
+                                    let tr2 = getleveltrivia 0
+                                    let ttr = Array.append t.lf4spaces (getleveltrivia (level+3)) // -1 + 3
+                                    vb2f.WithLeadingTrivia(ttr)
+                                )
+                                |> sf.List
+                                |> vb2.WithStatements
+                                |> (fun f -> f.WithEndKeywordToken(f.EndKeywordToken.WithLeadingTrivia(f.BeginKeywordToken.LeadingTrivia)))
+                                :> StatementSyntax
+                            | _ -> g
+                        )
+                        // blocksyntax
+                        vb.WithStatements(newStatements |> sf.List) :> StatementSyntax
+                    | _ -> raise (NotImplementedException())
+                | _ -> f
+            )
+            |> sf.List
+//        let sl = sf.List(statements)
         let statement =
-            sf.Block(sl)
+            sf.Block(statements |> sf.List)
                 .WithBeginKeywordToken(sf.Token(sk.BeginKeyword).WithLeadingTrivia(blocklevel))
                 .WithEndKeywordToken(sf.Token(sk.EndKeyword).WithLeadingTrivia(blocklevel))
                 .WithSemicolonToken(sf.Token(sk.SemicolonToken))
@@ -418,19 +456,21 @@ let rec buildStatements (level:int) (acc: StatementSyntax list) (statements:ALSt
                     .WithCloseParenthesisToken(sf.Token(sk.CloseParenToken))
                     .WithSemicolonToken(sf.Token(sk.SemicolonToken))
             buildStatements level (exitstatement::acc) tail
-        | ForLoop(initval, endval, doStatement, isUp) ->
-            let loopvar = sf.IdentifierName("i")
+        | ForLoop(loopvariable,initval, endval, doStatement, isUp) ->
+//            let loopvar = sf.IdentifierName("i")
+            let loopvar = loopvariable |> GenALExpression.buildExpression :?> CodeExpressionSyntax
             let doStatementExpanded =
                 match doStatement with
-                | FSALExpr (StatementExpr alStatement) ->
-                    match alStatement with
-                    | Assignment(alExpression, expression) -> 
-                        GenALStatement.createAssignment level (alExpression,expression)
-                    | _ -> failwith "invalid statement"
-                | _ -> failwith "invalid statement"
+                | Assignment(alExpression, expression) -> 
+                    GenALStatement.createAssignment level (alExpression,expression) :> StatementSyntax
+                | Block alStatements ->
+                    let statements = buildStatements (level+1) [] alStatements
+                    let v = GenALStatement.createBlock level statements
+                    v
+                
+                
+                | _ -> raise (NotImplementedException())
             
-            let sad123 = 5
-            let l1_idf : CodeExpressionSyntax = loopvar
             let l2_init  =
                 match initval with
                 | Constant o ->
@@ -490,6 +530,9 @@ module Members =
         
         match builder with
         | Procedure b ->
+            
+            
+            
             let variables =
                 b.localVariables
                 |> Seq.map (fun f -> VariableDeclaration.create f.name (TypeReference.create f.altype) )

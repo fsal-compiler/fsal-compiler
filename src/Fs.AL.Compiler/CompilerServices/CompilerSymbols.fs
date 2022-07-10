@@ -146,7 +146,8 @@ module FSharpType =
         match t with
         | "Microsoft.FSharp.Core.[]" -> () 
         | "Microsoft.FSharp.Core.Unit" -> ()
-        | "Microsoft.FSharp.Core.Ref" -> () 
+        | "Microsoft.FSharp.Core.Ref" -> ()
+        | "Microsoft.FSharp.Core.byref" -> () 
         | _ when t.StartsWith("Microsoft.FSharp") ->  failwith $"invalid type {t}"
         | _ -> ()
 #endif

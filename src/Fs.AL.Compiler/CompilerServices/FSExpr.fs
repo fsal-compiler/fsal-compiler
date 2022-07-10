@@ -44,6 +44,7 @@ module FSExpr =
         | FSharpExprPatterns.AddressOf(lvalueExpr) -> $"AddressOf:{lvalueExpr}"
         | FSharpExprPatterns.NewRecord(recordType, argExprs) -> $"NewRecord:%A{recordType}"
         | FSharpExprPatterns.FSharpFieldGet(objExprOpt, recordOrClassType, fieldInfo) -> $"FSharpFieldGet:%A{fieldInfo.Name}"
+        | FSharpExprPatterns.FastIntegerForLoop(startExpr, limitExpr, consumeExpr, isUp, debug1, debug2) -> $"FastIntegerForLoop:%A{startExpr.Range.Start}"
 
         | v ->
             let vt = v

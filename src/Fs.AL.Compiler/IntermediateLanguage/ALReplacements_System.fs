@@ -33,4 +33,24 @@ let ``TextWriter.WriteLine`` =
     
     
 
-
+//System.Array.get_Length
+let ``System.Array.get_Length`` = 
+    
+    { new IALFunctionReplacement with
+        member this.FunctionName = "System.Array.get_Length"
+        member this.Replacement =
+            (fun rargs ->
+                let objTarget,objType =
+                    match rargs.objExpr with
+                    | Some (FSharpExprPatterns.Value(valueToGet)) ->
+                        ALExpression.createIdentifer valueToGet,
+                        valueToGet.FullType |> ALType.ofFSharpType
+                    | _ -> raise (NotImplementedException())
+                    
+                match objType with
+                | Simple JsonArray -> ALExpression.createMemberAccessInvocation objTarget "Count" []
+                | _ -> raise (NotImplementedException())
+            )
+    }
+    
+    

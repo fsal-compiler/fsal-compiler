@@ -2,9 +2,11 @@
 module Fs.AL.Compiler.IntermediateLanguage.ALTypeMapping
 
 open System
+open System.Collections.Generic
 open FSharp.Compiler.Symbols
 open Fs.AL.Compiler.CompilerSymbols
 
+open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
 open Fs.AL.Core.ALComplexValues
 open Fs.AL.Core.ALCoreValues
 open Fs.AL.Core.Abstract
@@ -21,6 +23,15 @@ module ALType =
     let rec ofFSharpType (ftype:FSharpType) =
         let rootType = ftype |> FSharpType.getRootType
         let fullname = rootType |> FSharpType.getFullName
+        
+        
+        match rootType.TypeDefinition.IsProvidedAndErased with
+        | true ->
+            if fullname.StartsWith "Fable.JsonProvider.Generator<...>" then Simple JsonToken
+            else failwith $"unknown typeprovider type {fullname}"
+        | _ ->  
+        
+        
         
         match rootType with
         | HasALType alType -> alType
@@ -139,3 +150,48 @@ module ALType =
         
 
     let oa : int64 = 1
+    
+    
+module ALVariable =
+    
+    let createSimple name (simpleType:ALSimpleType) =
+        {
+            name = name
+            isMutable = false
+            altype = Simple simpleType
+        }
+        
+    let createComplex name (complexType:ALComplexType) =
+        {
+            name = name
+            isMutable = false
+            altype = Complex complexType
+        }
+        
+    let createForMfv (mfv:FSharpMemberOrFunctionOrValue) =
+        {
+            name = mfv.DisplayName
+            isMutable = false
+            altype = ALType.ofFSharpType mfv.FullType
+        }
+        
+    let createStaticModule (entity:FSharpEntity) refType =
+        let dispName = "@s@"+ entity.DisplayName
+        {
+            name = dispName
+            isMutable = false
+            altype = refType
+        }
+    
+    /// compiler generated json token
+    let createGenJsonToken (target:string) (targetJsonProp:string) (localvars:ICollection<ALVariable>) =
+        let intermediaryVarName = $"@j@{target}.{targetJsonProp}_{localvars.Count}"
+        {   name = intermediaryVarName
+            isMutable = false
+            altype = Simple JsonToken }
+        
+    let createGenField target targetProp alType (localvars:ICollection<ALVariable>) =
+        let targetVarName = $"@{target}.{targetProp}_{localvars.Count}"
+        {   name = targetVarName
+            isMutable = false
+            altype = alType }

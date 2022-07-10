@@ -47,8 +47,8 @@ module JsonTokens =
         | _ -> 
             ALExpression.createMemberAccessInvocation firstCast _castMethod2 []
  
-
-
+    
+  
 
 module ALStatement =
     let createSelectToken (identifier:string) (args) =
@@ -86,8 +86,8 @@ module ALExpression =
         let isReference (exp:FSharpExpr) =
             match exp with
             | FSharpExprPatterns.Value (valueToGet) ->
-                valueToGet.FullType.AbbreviatedType.TypeDefinition.FullName
-                    = "Microsoft.FSharp.Core.FSharpRef`1"
+                let sym = valueToGet.FullType.AbbreviatedType.TypeDefinition :> FSharpSymbol
+                sym.FullName = "Microsoft.FSharp.Core.FSharpRef`1"
             | _ -> false
             
     
@@ -162,39 +162,3 @@ module ALExpression =
             | _ -> failwith "unimplemented case"
                 
                 
-module ALVariable =
-    
-    let createSimple name (simpleType:ALSimpleType) =
-        {
-            name = name
-            isMutable = false
-            altype = Simple simpleType
-        }
-        
-    let createComplex name (complexType:ALComplexType) =
-        {
-            name = name
-            isMutable = false
-            altype = Complex complexType
-        }
-        
-    let createStaticModule (entity:FSharpEntity) refType =
-        let dispName = "@s@"+ entity.DisplayName
-        {
-            name = dispName
-            isMutable = false
-            altype = refType
-        }
-    
-    /// compiler generated json token
-    let createGenJsonToken target targetJsonProp (localvars:ICollection<ALVariable>) =
-        let intermediaryVarName = $"@j@{target}.{targetJsonProp}_{localvars.Count}"
-        {   name = intermediaryVarName
-            isMutable = false
-            altype = Simple JsonToken }
-        
-    let createGenField target targetProp alType (localvars:ICollection<ALVariable>) =
-        let targetVarName = $"@{target}.{targetProp}_{localvars.Count}"
-        {   name = targetVarName
-            isMutable = false
-            altype = alType }

@@ -18,5 +18,9 @@ let logUsing (logger: ILogger) = logger.Log
 
 /// Logs a message using the default logger.
 let log level message = logUsing ConsoleLogger level message
-let logDebug message = logUsing ConsoleLogger Debug message
+let logDebug message =
+#if DEBUG     
+    logUsing ConsoleLogger Debug message
+#endif    
+    ()
 let logInfo message = logUsing ConsoleLogger Information message

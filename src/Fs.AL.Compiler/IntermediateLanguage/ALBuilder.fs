@@ -33,6 +33,7 @@ type ALObjectBuilder with
         let returnvalue = 
             match mem.ReturnParameter.Type with
             //| x when x |> FSharpType.hasBaseType<IJsonDocument> -> Some (Simple (SimpleType "JsonToken"))
+            | x when FSharpType.isUnit x -> None
             | x when x.IsFunctionType -> Some (mem.ReturnParameter.Type |> ALType.ofFSharpType)
             | x when x.TypeDefinition.Assembly.QualifiedName = "" ->
                 if mem.Assembly.SimpleName <> "" then 
@@ -41,7 +42,6 @@ type ALObjectBuilder with
             | x when
                 let altype = x |> ALType.ofFSharpType
                 altype = Simple JsonArray -> Some (Simple JsonArray)
-            | x when x |> FSharpType.isUnit -> None 
             | _ -> Some (mem.ReturnParameter.Type |> ALType.ofFSharpType)   
         
         let parameters =
@@ -68,6 +68,14 @@ type ALObjectBuilder with
                 registeredReplacements = b.registeredFunctionReplacements
             }
       
+        use s =
+            procedureBuilder.localVariables.CollectionChanged.Subscribe
+                ( fun f ->
+                let a = f.Action
+                ()
+            )
+        
+        
         let newcontext = ExpressionReader.readProcedureBody procedureBuilder body
         let body1 = newcontext.statements
 //        printfn "%A" "--------------"

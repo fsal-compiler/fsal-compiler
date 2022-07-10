@@ -135,7 +135,7 @@ type ALStatement =
     | Expression of exp:ALExpression
     | IfStatement of guard:ALExpression * ``then``:ALStatement * ``else``:ALStatement option
     // TODO : case, while, repeat, for, with(?), foreach 
-    | ForLoop of assignment:ALExpression * exp:ALExpression * doStatement:ALExpression * isUp:bool  
+    | ForLoop of lambdaIdentifier:ALExpression * assignment:ALExpression * exp:ALExpression * doStatement:ALStatement * isUp:bool  
     | ForeachLoop of identifier:ALExpression * exp:ALExpression * doStatement:ALExpression
     | WhileLoop of guard:ALExpression * doStatement:ALExpression   
     | Exit of value:ALExpression
