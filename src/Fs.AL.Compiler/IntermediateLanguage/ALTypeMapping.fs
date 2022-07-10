@@ -128,15 +128,16 @@ module ALType =
             | Code lenOpt -> nameof Code
             | JsonToken -> nameof JsonToken
             | JsonArray -> nameof JsonArray
+            | JsonObject -> nameof JsonObject
             | List (listparam) ->
                 let lt = 5
                 "ListOf:" + listparam.ToString()
             | SimpleType typename ->
                 match typename with
-                | "JsonToken" -> "JsonToken"
-                | "JsonArray" -> "JsonArray"
-                | "JsonObject" -> "JsonObject"
-                | "JsonValue" -> "JsonValue"
+//                | "JsonToken" -> "JsonToken"
+//                | "JsonArray" -> "JsonArray"
+//                | "JsonObject" -> "JsonObject"
+//                | "JsonValue" -> "JsonValue"
                 | "XmlDocument" -> "XmlDocument"
                 | "XmlNode" -> "XmlNode"
                 | "XmlNodeList" -> "XmlNodeList"

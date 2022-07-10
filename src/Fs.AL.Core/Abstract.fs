@@ -30,6 +30,7 @@ module AL =
         inherit System.Attribute()
         member this.ObjectId : int = id
     
+    /// compile to JsonToken accesses in AL
     [<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]
     type Json() = 
         inherit System.Attribute()

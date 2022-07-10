@@ -78,10 +78,10 @@ module ALProcedureContext =
         addIfNotExists b var.name var
         
     let ensureHasJTokenVariable (b:ALProcedureContext) =
-        addIfNotExists b "_jtoken"
+        addIfNotExists b "@jtoken"
             {
               isMutable = false
-              name= "_jtoken"
+              name= "@jtoken"
               altype = Simple( SimpleType "JsonToken")
             }
             

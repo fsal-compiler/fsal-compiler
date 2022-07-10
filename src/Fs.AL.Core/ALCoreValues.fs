@@ -21,6 +21,7 @@ type ALSimpleType =
     | Integer
     | JsonToken
     | JsonArray
+    | JsonObject
     
 type ALComplexType =    
     | ComplexType of typename:string

@@ -41,8 +41,8 @@ let GetArray =
                                 let assignToIdentifer = ALExpression.createIdentifer assignTo
                                 let statements =
                                     [
-                                        ALExpression.createMemberAccessInvocation idf "Get" [zerobasedIndex ; Identifier "_jtoken"]  |> ALStatement.ofExpression
-                                        Assignment (assignToIdentifer,(Identifier "_jtoken"))
+                                        ALExpression.createMemberAccessInvocation idf "Get" [zerobasedIndex ; Identifier "@jtoken"]  |> ALStatement.ofExpression
+                                        Assignment (assignToIdentifer,(Identifier "@jtoken"))
                                     ]
                                 ALStatement.sequenceOf statements |> ALExpression.fromALStatement
                                 
@@ -70,12 +70,12 @@ let GetArray =
 
                         let allExpressions =
                             [
-                                ALStatement.createSelectToken "_jtoken" (args @ [Identifier jVarName])
+                                ALStatement.createSelectToken "@jtoken" (args @ [Identifier jVarName])
                                 ALStatement.createAssignment jArrayVarName
                                     (ALExpression.createJsonCastExpr jVarName targetType)
-                                ALStatement.createMemberCall jArrayVarName "Get" ([Constant idx] @ [Identifier "_jtoken"])
+                                ALStatement.createMemberCall jArrayVarName "Get" ([Constant idx] @ [Identifier "@jtoken"])
                                 ALStatement.createValAssignment letBindVal
-                                    (ALExpression.createJsonCastExpr "_jtoken" letBindVal.FullType)
+                                    (ALExpression.createJsonCastExpr "@jtoken" letBindVal.FullType)
                                     
                             ]
                             |> ALStatement.sequenceOf 

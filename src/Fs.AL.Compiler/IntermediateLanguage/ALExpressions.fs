@@ -69,7 +69,32 @@ module FSharpOperators =
 
 module FSALExpression =
     
-    let translateJsonTokenBindExpr (b:ALProcedureContext) (innerLetBinding:FSharpExpr) =
+    
+    let translateJsonTokenSerializeExpr (b:ALProcedureContext) (innerExpr:FSharpExpr) =
+        let outerLetExpr = ALExprContext.getLetBindingCtx b.expressionContext
+        let (letBindVal,kind) = outerLetExpr.Value
+        match innerExpr with
+        | FSharpExprPatterns.NewRecord(recordType, argExprs) ->
+            let jsonobj =
+                ALVariable.createSimple letBindVal.DisplayName JsonObject
+            jsonobj |> b.localVariables.Add
+            
+            let identifier = ALExpression.createIdentifer letBindVal
+            let assignedValues = argExprs |> Seq.map (ALExpression.ofFSharpExpr b)
+            let props = recordType.TypeDefinition.FSharpFields |> Seq.map (fun f -> f.Name) 
+            let assignmentBlock =
+                (props,assignedValues) ||> Seq.zip
+                |> Seq.map (fun (prop,value) ->
+                    let addToJson =
+                        ALExpression.createMemberAccessInvocation (identifier) "Add" [ Constant prop;  value ]
+                    addToJson |> ALStatement.ofExpression
+                )
+                |> Seq.toList
+                |> Block
+            let f = 1
+            assignmentBlock |> ALExpression.fromALStatement
+        | _ -> raise (NotImplementedException())
+    let translateJsonTokenReadExpr (b:ALProcedureContext) (innerLetBinding:FSharpExpr) =
         let outerLetExpr = ALExprContext.getLetBindingCtx b.expressionContext
         
         let selectTokenStr = "SelectToken"
@@ -275,7 +300,19 @@ module FSALExpression =
                             let idf = ALExpression.createIdentifer letBindingVar
                             expkind, ALExpression.createMemberAccessInvocation idf methodname args
                         | _ -> raise (NotImplementedException()) 
-                        
+                    | Core.``JsonSerializer.Serialize`` ->
+                        let jsonstring = ALVariable.createForMfv letBindingVar
+                        jsonstring |> b.localVariables.Add
+                        let serializeTarget =
+                            match argExprs[0] with
+                            | FSharpExprPatterns.Value(valueToGet) -> valueToGet 
+                            | _ -> raise (NotImplementedException())
+                        let replacement =
+                            ALExpression.createMemberAccessInvocation
+                                (ALExpression.createIdentifer serializeTarget)
+                                "WriteTo"
+                                [Identifier jsonstring.name]
+                        LetExprKind.Override, replacement
                     | _ ->   
                         let test1 = 1
 //                        let (FSharpExprPatterns.Coerce(c) ) = argExprs[0]
@@ -328,7 +365,7 @@ module FSALExpression =
                     match isJsonField with
                     | true ->
                         ALExprContext.usingCtx (ALExprContext.LetBinding (letBindingVar,LetExprKind.Override)) b.expressionContext (fun f ->
-                                FSALExpression.translateJsonTokenBindExpr b letBindingExpr
+                                FSALExpression.translateJsonTokenReadExpr b letBindingExpr
                             )
                     | false -> LetExprKind.Normal,letBindingExpr |> ALExpression.ofFSharpExpr b   
                 | _ -> LetExprKind.Normal,letBindingExpr |> ALExpression.ofFSharpExpr b
@@ -626,10 +663,18 @@ module ALExpression =
 
         | FSharpExprPatterns.NewRecord(recordType, argExprs) ->
             // Todo : new record
+            
+            let isJsonField = recordType.TypeDefinition |> FSharpEntity.hasAttribute<AL.Json>
+            match isJsonField with
+            | true -> FSALExpression.translateJsonTokenSerializeExpr b exp
+            | _ -> 
+            
             let assignTo = b.expressionContext |> ALExprContext.getLetBindingCtx
             match assignTo with
             | None -> raise (NotImplementedException())
             | Some (letBindVal,kind) ->
+                
+                
                 let identifier = ALExpression.createIdentifer letBindVal
                 let assignedValues = argExprs |> Seq.map (ALExpression.ofFSharpExpr b)
                 let props = recordType.TypeDefinition.FSharpFields |> Seq.map (fun f -> f.Name) 
@@ -954,12 +999,12 @@ module ALExpression =
                             match genericType |> FSharpType.getFullName with
                             | Types.String | Types.Int32 | Types.Double ->
                                 // declare string list to collect values
-                                ALStatement.ForeachLoop ((Identifier "_jtoken"),
+                                ALStatement.ForeachLoop ((Identifier "@jtoken"),
                                     ALExpression.createMemberAccessInvocation (Identifier letBindVarJsonName) "AsArray" [],
                                     ALExpression.createMemberAccessInvocation
                                         (Identifier letBindVar.DisplayName)
                                         "Add"
-                                        [ ALExpression.createJsonCastExpr "_jtoken" genType.Value ] 
+                                        [ ALExpression.createJsonCastExpr "@jtoken" genType.Value ] 
                                 )
                             | n ->
                                 let genfstype = genericType |> ALType.ofFSharpType

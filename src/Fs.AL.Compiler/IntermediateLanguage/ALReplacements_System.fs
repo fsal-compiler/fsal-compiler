@@ -3,6 +3,7 @@ module Fs.AL.Compiler.IntermediateLanguage.ALReplacements_System
 
 open System
 open FSharp.Compiler.Symbols
+open Fs.AL.Compiler.CompilerServices
 open Fs.AL.Compiler.CompilerSymbols
 open Fs.AL.Compiler.Fullname
 open Fs.AL.Compiler.IntermediateLanguage
@@ -54,3 +55,29 @@ let ``System.Array.get_Length`` =
     }
     
     
+    
+//let ``System.Text.Json.JsonSerializer.Serialize`` = 
+//    
+//    { new IALFunctionReplacement with
+//        member this.FunctionName = "System.Text.Json.JsonSerializer.Serialize"
+//        member this.Replacement =
+//            (fun rargs ->
+//                let serializeTarget =
+//                    match rargs.argExprs[0] with
+//                    | FSharpExprPatterns.Value(valueToGet) -> valueToGet 
+//                    | _ -> raise (NotImplementedException())
+//                let v = 1
+//                let objTarget,objType =
+//                    match rargs.objExpr with
+//                    | Some (FSharpExprPatterns.Value(valueToGet)) ->
+//                        ALExpression.createIdentifer valueToGet,
+//                        valueToGet.FullType |> ALType.ofFSharpType
+//                    | _ -> raise (NotImplementedException())
+//                    
+//                match objType with
+//                | Simple JsonArray -> ALExpression.createMemberAccessInvocation objTarget "Count" []
+//                | _ -> raise (NotImplementedException())
+//            )
+//    }
+//    
+        

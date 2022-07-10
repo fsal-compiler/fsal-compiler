@@ -13,7 +13,7 @@ open Microsoft.FSharp.Core
 
 #if DEBUG
 //Directory.SetCurrentDirectory(__SOURCE_DIRECTORY__ + @"./../Fs.AL.SampleProject/")
-//Directory.SetCurrentDirectory(@"C:\Users\kast\source\publicrepos\fsal-maaamet")
+Directory.SetCurrentDirectory(@"C:\Users\kast\source\publicrepos\fsal-maaamet")
 #endif
 
 let settings =
