@@ -12,7 +12,7 @@ NOTE: Projects with large packages generated from Type Provider have been commen
 
 #### Dependencies: 
 
-- .NET 6.0 SDK (https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-6.0.300-windows-x64-installer)
+- .NET 6.0 SDK (https://dotnet.microsoft.com/en-us/download)
 
 
 #### Making local nuget packages accessible   
