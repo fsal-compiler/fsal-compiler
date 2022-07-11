@@ -1,6 +1,6 @@
 # F# to AL compiler
 
-| ![](../fsal-compiler/_resources/18-01-00.png) | ![](../fsal-compiler/_resources/18-01-36.png) |
+| ![image](https://user-images.githubusercontent.com/36763595/178295900-438adbb5-feed-40c4-ae93-6f424dfe87e1.png) | ![image](https://user-images.githubusercontent.com/36763595/178296039-8d98d95d-6c54-49df-ba51-7ce05119d098.png) |
 |:---:|:---:|
 
 # NOTE: 
