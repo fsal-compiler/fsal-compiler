@@ -1,5 +1,11 @@
 # F# to AL compiler
 
+| ![](../fsal-compiler/_resources/18-01-00.png) | ![](../fsal-compiler/_resources/18-01-36.png) |
+|:---:|:---:|
+
+# NOTE: 
+this project is still in active development and may change at any time
+
 ## Building the project 
 
 NOTE: Projects with large packages generated from Type Provider have been commented out as compiling them takes a very long time, the output have been stored in pre-compiled nuget packages in ./nupkg, for this reason i suggest using the pre-compiled nuget packages directly.
@@ -20,6 +26,6 @@ NOTE: Projects with large packages generated from Type Provider have been commen
 - restore the dependencies using `dotnet restore`
 - build the solution using `dotnet build`
 - open the directory `src\Fs.AL.SampleProject`
-- inside the directory is an `fsal.json` file, which specifies the paths used for resolving dependencies by the compiler, ensure that there is a reference to the .NET installation e.g. `"C:\\Program Files\\dotnet\\packs\\Microsoft.NETCore.App.Ref\\6.0.3\\ref\\net6.0"` and a reference to the design-time DLLs of any used type provider (e.g. the Fable.JsonProvider dll `"C:\\users\\username\\.nuget\\packages\\fable.jsonprovider\\1.0.1\\lib\\netstandard2.0\\Fable.JsonProvider.dll"`)
+- inside the directory is an `fsal.json` file, which specifies the paths used for resolving dependencies by the compiler, ensure that there is a reference to the correct .NET installation e.g. `"C:\\Program Files\\dotnet\\packs\\Microsoft.NETCore.App.Ref\\6.0.6\\ref\\net6.0"` and a reference to the design-time DLLs of any used type provider (e.g. the Fable.JsonProvider dll `"C:\\users\\username\\.nuget\\packages\\fable.jsonprovider\\1.0.1\\lib\\netstandard2.0\\Fable.JsonProvider.dll"`)
 - after that run `dotnet fsi compile.fsx`, which runs the compiler in the current working directory
 
