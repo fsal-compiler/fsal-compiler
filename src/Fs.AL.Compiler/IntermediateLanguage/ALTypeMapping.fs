@@ -41,6 +41,8 @@ module ALType =
         let debug = 1
         
         match fullname with
+        | "Fs.AL.Core.ALSimpleValues.ALJsonObject" -> Simple JsonObject
+        | "Fs.AL.Core.ALSimpleValues.ALJsonToken" -> Simple JsonToken
         | "Fable.JsonProvider.Generator<...>" -> Simple JsonToken
         | Operators.ref -> ftype.GenericArguments[0] |> ofFSharpType
         | "Microsoft.FSharp.Core.byref" -> ftype.GenericArguments[0] |> ofFSharpType
