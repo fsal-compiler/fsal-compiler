@@ -134,6 +134,15 @@ module ALExpression =
         NaryExpression (Invocation( Binary (
             targetExpr,ALBinaryOperator.MemberAccess,Identifier memberName) ,args))
         
+    
+    let createOptionAccessExpr left optionName =
+        ALExpression.Binary(
+                left,
+                ALBinaryOperator.Scope,
+                Identifier optionName
+        )
+    
+    
     /// e.g. <methodName>(args)
     let createInvocation methodName args =
         NaryExpression (Invocation(

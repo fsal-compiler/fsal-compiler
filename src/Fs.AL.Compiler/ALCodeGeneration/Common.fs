@@ -35,3 +35,10 @@ module SeparatedSyntaxList =
         let ssl = SeparatedSyntaxList()
         ssl.Add(x)
         
+    let ofValues (values:string list) =
+        let ssl = SeparatedSyntaxList()
+        List.fold (fun (acc:SeparatedSyntaxList<IdentifierNameOrEmptySyntax>) (f:string) ->
+            f |> sf.IdentifierName |> sf.IdentifierNameOrEmpty |> acc.Add )
+            ssl values
+        
+        

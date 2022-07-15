@@ -25,6 +25,7 @@ type ALExprContext =
     | Sequential of chain:FSharpExpr list
     | BindingVar of FSharpMemberOrFunctionOrValue
     | LetBinding of bindVar:FSharpMemberOrFunctionOrValue * kind:LetExprKind // var:FSharpMemberOrFunctionOrValue * bindingExpr:FSharpExpr
+    | FieldSet of objExprOpt:option<FSharpExpr> * recordOrClassType:FSharpType * fieldInfo:FSharpField * argExpr:FSharpExpr // var:FSharpMemberOrFunctionOrValue * bindingExpr:FSharpExpr
     | DecisionTree of decisionExpr:FSharpExpr * targets:ALExpression list
     | Constructor of identifier:string // todo refactor
     static member usingCtx (ctx:ALExprContext) (context:ICollection<ALExprContext>)  fn  =
@@ -45,6 +46,15 @@ type ALExprContext =
         
 
     static member getLetBindingCtx (context:ICollection<ALExprContext>) =
+        context
+        |> Seq.choose (fun f ->
+            match f with
+            | ALExprContext.LetBinding(memberOrFunctionOrValue, letExprKind) -> (memberOrFunctionOrValue,letExprKind) |> Some     
+            | _ -> None
+        )
+        |> Seq.tryLast
+        
+    static member getFieldSetCtx (context:ICollection<ALExprContext>) =
         context
         |> Seq.choose (fun f ->
             match f with

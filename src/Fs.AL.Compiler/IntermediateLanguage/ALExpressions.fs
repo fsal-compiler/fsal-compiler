@@ -659,7 +659,16 @@ module ALExpression =
         | FSharpExprPatterns.FSharpFieldGet(objExprOpt, recordOrClassType, fieldInfo) ->
             //TODO: proper implementation            
 //            raise (NotImplementedException())
-            Identifier fieldInfo.Name
+            match objExprOpt with
+            | None -> Identifier fieldInfo.Name
+            | Some objExp ->
+                match objExp with
+                | FSharpExprPatterns.Value (v) ->
+                    ALExpression.createMemberAccess
+                        (ALExpression.createIdentifer v)
+                        fieldInfo.Name
+                | _ -> raise (NotImplementedException())
+            
 
         | FSharpExprPatterns.NewRecord(recordType, argExprs) ->
             // Todo : new record
@@ -687,7 +696,9 @@ module ALExpression =
                     |> Block
                 let f = 1
                 assignmentBlock |> ALExpression.fromALStatement
-        | FSharpExprPatterns.AddressOf(lvalueExpr) -> lvalueExpr |> ALExpression.ofFSharpExpr b
+        | FSharpExprPatterns.AddressOf(lvalueExpr) ->
+            let debug = 1
+            lvalueExpr |> ALExpression.ofFSharpExpr b
         | FSharpExprPatterns.DecisionTreeSuccess (decisionTargetIdx, decisionTargetExprs) ->
             let result = FSALExpression.translateDecisionTreeSuccess b exp
             result 
@@ -915,7 +926,7 @@ module ALExpression =
             
             Identifier valueToGet.DisplayName
         | FSharpExprPatterns.Const(constValueObj, constType) -> Constant constValueObj // json parsing
-        | FSharpExprPatterns.DefaultValue defaultType -> FSALExpr (Ignore)
+        
 
         //            let fsdf = 5
 //            exp
@@ -968,7 +979,7 @@ module ALExpression =
                     // declare intermediary var
                     {   name = letBindVarJsonName
                         isMutable = false
-                        altype = Simple (SimpleType "JsonToken") } //ALType.ofFSharpType targetType
+                        altype = Simple JsonToken } //ALType.ofFSharpType targetType
                     |> b.localVariables.Add
                     // select token to intermediary var
                     let memberAccess =
@@ -1148,7 +1159,41 @@ module ALExpression =
             let al_finalize = finalizeExpr |> ALExpression.ofFSharpExpr b |> ALStatement.ofExpression
             Sequence(al_body,al_finalize)
             |> toExpr
+        | FSharpExprPatterns.FSharpFieldSet(objExprOpt, recordOrClassType, fieldInfo, argExpr) ->
+            let assignto = objExprOpt.Value |> ALExpression.ofFSharpExpr b
+            let assignedMember = ALExpression.createMemberAccess assignto fieldInfo.Name
+            let assignedVal2 = 
+                ALExprContext.usingCtx (ALExprContext.FieldSet(objExprOpt, recordOrClassType, fieldInfo, argExpr)) b.expressionContext
+                    (fun f -> argExpr |> ALExpression.ofFSharpExpr b )
+//            let assignedValue = argExpr |> ALExpression.ofFSharpExpr b
+            Assignment(assignedMember,assignedVal2)
+            |> toExpr
+        | FSharpExprPatterns.DefaultValue defaultType ->
+            let debug =1
             
+            let v = 1
+            FSALExpr (Ignore)
+        | FSharpExprPatterns.NewUnionCase(unionType, unionCase, argExprs) ->
+            
+            //todo: refactor to enum and add other uses
+            let isOption =
+                unionType.TypeDefinition |> FSharpEntity.hasAttribute<AL.Option>
+            
+            match b.expressionContext |> Seq.last, isOption with
+            | ALExprContext.FieldSet(objExprOpt, recordOrClassType, fieldInfo, argExpr), true ->
+                let left =
+                    match objExprOpt with
+                    | Some v1 ->
+                        match v1 with
+                        | FSharpExprPatterns.Value(v) ->
+                            ALExpression.createMemberAccess
+                                (v |> ALExpression.createIdentifer)
+                                fieldInfo.Name
+                        | _ -> NotImplementedException() |> raise   
+                    | _ -> NotImplementedException() |> raise
+                ALExpression.createOptionAccessExpr left unionCase.Name
+            | _ ->  NotImplementedException() |> raise
+
         | x ->
             failwithf $"expression not implemented %A{x}"
         

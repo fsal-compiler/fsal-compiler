@@ -45,6 +45,7 @@ module GenALExpression =
         let exp1 = a1 |> buildExpression :?> CodeExpressionSyntax 
         let exp2 = a2 |> buildExpression :?> CodeExpressionSyntax
         match op with
+        | Scope -> sf.OptionAccessExpression(exp1,exp2 :?> IdentifierNameSyntax)
         | MemberAccess -> sf.MemberAccessExpression(exp1,exp2 :?> IdentifierNameSyntax)
         | _ ->
         match op with
@@ -73,6 +74,7 @@ module GenALExpression =
             let tgt = alExpression |> buildExpression :?> CodeExpressionSyntax
             let args =
                 alExpressions
+                |> List.where (fun f -> f <> ALExpression.FSALExpr Ignore)
                 |> List.map (fun f -> buildExpression f :?> CodeExpressionSyntax)
             let separatedSyntaxList = SeparatedSyntaxList()
             match args with

@@ -26,10 +26,6 @@ let replacementFunctions : ( string * ((FSharpExpr -> ALExpression) -> FSharpExp
         (fun toAL obj mem typeArgs2 args -> ALExpression.createInvocation "ReadFrom" [toAL obj.Value] )
         "System.DateTime.get_Now",
         (fun toAL obj mem typeArgs2 args -> ALExpression.createInvocation "CurrentDateTime" [] )
-        "Fs.AL.Core.ALFunctions.ALDialog.Message",
-        (fun toAL obj mem typeArgs2 args -> ALExpression.createMemberAccessInvocation (Identifier "Dialog") "Message" (args |> List.map toAL)  )
-        "Fs.AL.Core.ALFunctions.ALDialog.Error",
-        (fun toAL obj mem typeArgs2 args -> ALExpression.createMemberAccessInvocation (Identifier "Dialog") "Error" (args |> List.map toAL)  )
         "System.Console.WriteLine",
         (fun toAL obj mem typeArgs2 args -> ALExpression.createMemberAccessInvocation (Identifier "Dialog") "Message" (args |> List.map toAL)  )
         "System.String.Substring",

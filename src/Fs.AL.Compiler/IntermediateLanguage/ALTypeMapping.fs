@@ -82,10 +82,17 @@ module ALType =
         | x when ftype |> FSharpType.hasBaseType<ALSimpleValue> -> Simple (SimpleType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
         | x when ftype |> FSharpType.hasBaseType<ALComplexValue> -> Complex (ComplexType (FSharpEntity.getALCompiledName ftype.TypeDefinition))
         | x when ftype.TypeDefinition |> FSharpEntity.hasAttribute<AL.Json> -> Simple JsonToken // use as json type
+        | x when ftype.TypeDefinition |> FSharpEntity.hasAttribute<AL.Option> ->
+            // cast cases to option types
+            let cases =
+                ftype.TypeDefinition.UnionCases
+                |> Seq.map (fun f -> f.Name)
+                |> Seq.toList
+            Simple (Option cases) 
         // todo: handle union type fields too
-        | x when ftype.TypeDefinition.IsFSharpUnion ->
-            let unioncase = ftype.TypeDefinition.UnionCases
-            Simple JsonToken // use as json type
+//        | x when ftype.TypeDefinition.IsFSharpUnion ->
+//            let unioncase = ftype.TypeDefinition.UnionCases
+//            Simple JsonToken // use as json type
         // System.** namespace types
         | ALTypeReplacements.HasCoreLibType mapping -> mapping
         // jsonprovider types
@@ -134,6 +141,8 @@ module ALType =
             | List (listparam) ->
                 let lt = 5
                 "ListOf:" + listparam.ToString()
+            | Option cases ->
+                "OptionOf:" + cases.ToString()
             | SimpleType typename ->
                 match typename with
 //                | "JsonToken" -> "JsonToken"
@@ -198,3 +207,20 @@ module ALVariable =
         {   name = targetVarName
             isMutable = false
             altype = alType }
+
+    
+    let private addIfNotExists (vars:ICollection<ALVariable>) name ifNot =
+        let alVariableOption = 
+            vars
+            |> Seq.tryFind (fun f -> f.name = name)
+        match alVariableOption with  
+        | Some _ -> ()
+        | None -> vars.Add(ifNot)
+
+    let ensureHasJTokenVariable (vars:ICollection<ALVariable>) =
+        addIfNotExists vars "@jtoken"
+            {
+              isMutable = false
+              name= "@jtoken"
+              altype = Simple JsonToken
+            }

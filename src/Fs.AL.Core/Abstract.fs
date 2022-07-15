@@ -34,6 +34,11 @@ module AL =
     [<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]
     type Json() = 
         inherit System.Attribute()
+        
+    /// compile to Option values in AL
+    [<AttributeUsage(AttributeTargets.Struct|||AttributeTargets.Class,Inherited=true,AllowMultiple=false)>]
+    type Option() = 
+        inherit System.Attribute()
 
 [<AbstractClass>]
 type ALSimpleValue() = do ()

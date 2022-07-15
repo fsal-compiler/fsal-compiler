@@ -39,6 +39,7 @@ let GetArray =
                             | Some (assignTo,LetExprKind.TypeProvider _) ->
                                 let v = 1
                                 let assignToIdentifer = ALExpression.createIdentifer assignTo
+                                ctx.variableDeclarations |> ALVariable.ensureHasJTokenVariable
                                 let statements =
                                     [
                                         ALExpression.createMemberAccessInvocation idf "Get" [zerobasedIndex ; Identifier "@jtoken"]  |> ALStatement.ofExpression

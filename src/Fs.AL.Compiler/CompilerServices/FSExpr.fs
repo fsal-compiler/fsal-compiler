@@ -23,7 +23,7 @@ module FSExpr =
         | FSharpExprPatterns.Const v -> true
         | _ -> false
 
-
+    
     let getPatternName (e:t) =
         match e with
         | FSharpExprPatterns.Const(constValueObj, constType) -> $"Const:{constValueObj}"
@@ -45,7 +45,9 @@ module FSExpr =
         | FSharpExprPatterns.NewRecord(recordType, argExprs) -> $"NewRecord:%A{recordType}"
         | FSharpExprPatterns.FSharpFieldGet(objExprOpt, recordOrClassType, fieldInfo) -> $"FSharpFieldGet:%A{fieldInfo.Name}"
         | FSharpExprPatterns.FastIntegerForLoop(startExpr, limitExpr, consumeExpr, isUp, debug1, debug2) -> $"FastIntegerForLoop:%A{startExpr.Range.Start}"
-
+        | FSharpExprPatterns.FSharpFieldSet(objExprOpt, recordOrClassType, fieldInfo, argExpr) ->  $"FSharpFieldSet:%A{objExprOpt}:%A{fieldInfo.Name}"
+        | FSharpExprPatterns.DefaultValue defaultType -> $"DefaultValue:%A{defaultType}"
+        | FSharpExprPatterns.NewUnionCase(unionType, unionCase, argExprs) ->  $"NewUnionCase:%A{unionCase}"
         | v ->
             let vt = v
             "-----"

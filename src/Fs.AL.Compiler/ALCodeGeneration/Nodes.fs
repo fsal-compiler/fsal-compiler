@@ -1,6 +1,8 @@
 ﻿module Fs.AL.Compiler.ALCodeGeneration.Nodes
 
+open System
 open Fs.AL.Compiler.ALBuilder
+open Fs.AL.Compiler.ALCodeGeneration
 open Fs.AL.Compiler.ALCodeGeneration.Common
 open Fs.AL.Compiler.IntermediateLanguage
 open Fs.AL.Compiler.IntermediateLanguage.ALLanguage
@@ -12,18 +14,45 @@ open Microsoft.Dynamics.Nav.CodeAnalysis.Syntax
 type private sf = Microsoft.Dynamics.Nav.CodeAnalysis.SyntaxFactory
 type private sk = Microsoft.Dynamics.Nav.CodeAnalysis.SyntaxKind
 
-module Codeunit =
-    let create (id:int) (name:string) =
-        let objId = sf.ObjectId(id).WithLeadingTrivia(sf.Space)
-        let objName = sf.IdentifierName(name).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Linefeed)
-        let cu = sf.Codeunit(objId,objName)
-        cu
+
+module PropertyList =
+    
+    let create (props:PropertySyntaxOrEmpty seq) =
+        sf.PropertyList(
+            sf.List(props))
+        
+    let ofOptionValues (values:string list) : PropertySyntaxOrEmpty seq =
+        let proplist = 
+            seq {
+                let optmempropvalue =
+                    values
+                    |> SeparatedSyntaxList.ofValues
+                    |> sf.OptionValues
+                    |> sf.OptionValuesPropertyValue
+                yield sf.Property(PropertyKind.OptionMembers, optmempropvalue).WithLeadingTrivia(Trivia.lf12spaces) :> PropertySyntaxOrEmpty
+                let optcaptpropvalue =
+                    values
+                    |> String.concat ","
+                    |> sf.Literal
+                    |> sf.StringLiteralValue
+                    |> sf.StringPropertyValue
+                yield sf.Property(PropertyKind.OptionCaption,optcaptpropvalue).WithLeadingTrivia(Trivia.lf12spaces) :> PropertySyntaxOrEmpty
+            }    
+        proplist
+
 
 module TypeReference =
     
     module t = Common.Trivia
     let create (name:ALType) : TypeReferenceBaseSyntax =
         match name with
+        | Simple (Option values) ->
+            let opttype =
+                sf.ParseToken("Option") |> sf.OptionDataType
+            let vals = SeparatedSyntaxList.ofValues values
+            opttype.WithOptionValues(sf.OptionValues vals)
+            |> sf.SimpleTypeReference
+            :> TypeReferenceBaseSyntax
         | Simple (List lt) ->
             let inner =
                 Simple lt
@@ -62,15 +91,23 @@ module TypeReference =
             let st = sf.SubtypedDataType(reckeyword,objnameorid)
             sf.SimpleTypeReference(st)
             |> (fun f -> f.WithLeadingTrivia(sf.Space))
-        | _ ->
+        | Simple _ ->
             name
             |> ALType.toString
             |> sf.ParseToken
-//            |> sf.ObjectNameOrId
             |> sf.SimpleNamedDataType
             |> sf.SimpleTypeReference
             |> (fun f -> f.WithLeadingTrivia(sf.Space))
-        
+        | Complex _ ->
+            name
+            |> ALType.toString
+            |> sf.ParseToken
+            |> sf.SimpleNamedDataType
+            |> sf.SimpleTypeReference
+            |> (fun f -> f.WithLeadingTrivia(sf.Space))
+//        | _ ->
+//            name |> string |> NotImplementedException |> raise
+//        
         
         
 module VariableDeclaration =
@@ -136,6 +173,12 @@ module Procedure =
             
 
 
+module Codeunit =
+    let create (id:int) (name:string) =
+        let objId = sf.ObjectId(id).WithLeadingTrivia(sf.Space)
+        let objName = sf.IdentifierName(name).WithLeadingTrivia(sf.Space).WithTrailingTrivia(sf.Linefeed)
+        let cu = sf.Codeunit(objId,objName)
+        cu
             
             
 module Record =
@@ -167,8 +210,13 @@ module Field =
                         .WithCloseBracketToken(sf.Token(sk.CloseBracketToken))
                         :> DataTypeSyntax
                 lt
+            | Simple (Option values) ->
+                TypeReference.create (Simple (Option []))
+                |> (fun f -> f.DataType)
             | _ ->
-                    
+                let tr = TypeReference.create altype
+                tr.DataType
+            | _ ->
                 altype |> ALType.toString
                 |> sf.ParseToken
                 |> sf.SimpleNamedDataType :> DataTypeSyntax
@@ -178,8 +226,16 @@ module Field =
             |> (fun f -> f.WithLeadingTrivia(Trivia.lf8spaces))
             |> (fun f -> f.WithOpenBraceToken(f.OpenBraceToken.WithLeadingTrivia(Trivia.lf8spaces)))
             |> (fun f -> f.WithCloseBraceToken(f.CloseBraceToken.WithLeadingTrivia(Trivia.lf8spaces)))
+            
+        
+        let field2 =
+            match altype with
+            | Simple (Option values) ->
+                let proplist = values |> PropertyList.ofOptionValues |> PropertyList.create
+                field.WithPropertyList(proplist)
+            | _ -> field
                 
-        field
+        field2
 
 
 module FieldList =

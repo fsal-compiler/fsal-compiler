@@ -82,7 +82,7 @@ module ALProcedureContext =
             {
               isMutable = false
               name= "@jtoken"
-              altype = Simple( SimpleType "JsonToken")
+              altype = Simple JsonToken
             }
             
             

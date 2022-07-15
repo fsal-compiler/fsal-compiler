@@ -26,6 +26,7 @@
         <Compile Include="IntermediateLanguage\ALReplacements.fs" />
         <Compile Include="IntermediateLanguage\ALReplacements_Fable_JsonProvider.fs" />
         <Compile Include="IntermediateLanguage\ALReplacements_Microsoft_FSharp_Core.fs" />
+        <Compile Include="IntermediateLanguage\ALReplacements_Fs_AL_Core_ALFunctions.fs" />
         <Compile Include="IntermediateLanguage\ALReplacements_System.fs" />
         <Compile Include="IntermediateLanguage\ALContext.fs" />
         <Compile Include="IntermediateLanguage\ALExpressions.fs" />
