@@ -142,25 +142,12 @@ module ParameterList =
         
 module Procedure =
     
-    let create (name:string) parameters variables (body:BlockSyntax) returnval =
+    let create isLocal (name:string) parameters variables (body:BlockSyntax) returnval =
         let returnv =
             match returnval with
             | None -> null
             | Some value ->
                 sf.ReturnValue(TypeReference.create value)
-//                let oldstatements = body.Statements
-//                let laststatement = body.Statements.Last() :?> ExpressionStatementSyntax
-//                let exitparam =
-//                    sf.ExitStatement(laststatement.Expression)
-//                        .WithOpenParenthesisToken(sf.Token(sk.OpenParenToken))
-//                        .WithCloseParenthesisToken(sf.Token(sk.CloseParenToken))
-//                        .WithSemicolonToken(sf.Token(sk.SemicolonToken))
-//                let newStatements = oldstatements.Replace(laststatement,exitparam)
-//                body.WithStatements(newStatements);
-//                
-                
-            
-        
             
         let nametoken = sf.IdentifierName(name).WithLeadingTrivia(sf.Space)
         sf.MethodDeclaration(nametoken)
@@ -168,8 +155,14 @@ module Procedure =
             .WithParameterList(parameters)
             .WithAccessModifier(sf.Token(SyntaxKind.None))
             .WithVariables(variables)
-            .WithLeadingTrivia(Trivia.lf4spaces)
             .WithReturnValue(returnv)
+            .WithAccessModifier(
+                match isLocal with   
+                | true -> sf.Token(sk.LocalKeyword).WithTrailingTrivia(sf.Space)
+                | _ -> sf.Token(sk.EmptyToken)
+            )
+            |> (fun f -> f.WithLeadingTrivia(Trivia.lf4spaces))
+            
             
 
 

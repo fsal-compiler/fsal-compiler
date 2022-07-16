@@ -60,7 +60,7 @@ type ALObjectBuilder with
             
         let procedureBuilder =
             { ALProcedureContext.Default with
-                isLocal= false // TODO: implement
+                isLocal= mem.Accessibility.IsPrivate // TODO: implement
                 identifier = mem.DisplayName
                 parameters = parameters
                 entity = mem.ApparentEnclosingEntity

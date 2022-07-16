@@ -885,9 +885,17 @@ module ALExpression =
                         match isStaticReference with
                         | None -> failwith "could not resolve type" 
                         | Some reftype ->
+                            // call own local function
+                            if ent = b.entity then
+                                let expr =
+                                    ALExpression.createInvocation
+                                        memberOrFunc.DisplayName
+                                        (argExprs |> List.map (ofFSharpExpr b))
+                                expr
+                            // call static module function
+                            else
                             let smodule = ALVariable.createStaticModule ent reftype
                             smodule |> ALProcedureContext.ensureHasVariable b     
-                        
                             let expr =
                                 ALExpression.createMemberAccessInvocation
                                     (Identifier smodule.name)

@@ -549,7 +549,7 @@ module Members =
                 
             let parameters = b.parameters |> ParameterList.create
             let procbody = GenALStatement.createBlock -1 statements |> (fun f -> f.WithTrailingTrivia(sf.Linefeed))
-            Procedure.create b.identifier parameters variables procbody b.returnType
+            Procedure.create b.isLocal b.identifier parameters variables procbody b.returnType
        
     let createField (builder:ALFieldBuilder) : FieldSyntax =
         match builder with
