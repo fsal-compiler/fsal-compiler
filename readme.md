@@ -4,7 +4,7 @@
 |:---:|:---:|
 
 # NOTE: 
-this project is still in active development and may change at any time
+this project is unfinished
 
 ## Building the project 
 
