@@ -4,7 +4,9 @@
 |:---:|:---:|
 
 # NOTE: 
-this project is unfinished
+this is the source code for the thesis [F\# type provider and compiler for the AL programming language ](https://digikogu.taltech.ee/en/item/d0c6a5dc-90e7-4add-b34c-0ed9dfff1bb4) as it was when it was written. 
+
+this project is a proof of concept and not usable in production.
 
 ## Building the project 
 
